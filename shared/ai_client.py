@@ -1,7 +1,7 @@
 import os, requests, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.supabase import supabase
+from shared.supabase import get_supabase
 from shared.logger import log_event
 
 YANDEX_API_KEY = os.environ.get('YANDEX_API_KEY', '')
@@ -62,7 +62,7 @@ def get_relevant_chunks(site_id, question):
     try:
         model = get_model()
         query_embedding = model.encode(f"query: {question}", normalize_embeddings=True).tolist()
-        result = supabase.rpc('match_chunks', {
+        result = get_supabase().rpc('match_chunks', {
             'query_embedding': query_embedding,
             'match_count': 5,
             'site_id': site_id

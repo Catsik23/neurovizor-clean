@@ -22,7 +22,7 @@ def generate_faq(title, text, phones, emails):
         '[{"q": "вопрос", "a": "ответ", "category": "категория"}, ...]\n\n'
         "Категории: about, pricing, delivery, contacts, guarantees, ordering.\n"
         "Не добавляй комментарии. Не оборачивай в ```json```.\n\n"
-        f"Текст сайта:\n<site_content>\n{text[:4000]}\n</site_content>"
+        f"Текст сайта:\n<site_content>\n{text[:8000]}\n</site_content>"
     )
 
     try:
