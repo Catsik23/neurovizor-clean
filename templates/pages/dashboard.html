@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Дашборд — AI Visibility Optimizer{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-link active">Дашборд</a>
+        <a href="/dashboard/sites/new" class="nav-link">+ Добавить сайт</a>
+        <a href="/dashboard/settings" class="nav-link">Настройки</a>
+        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+    </div>
+</div>
+
+<!-- Метрики -->
+<div class="grid-2 mb-3">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--neon);">{{ sites|length if sites else 0 }}</div>
+        <div class="text-muted text-sm">сайтов добавлено</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--neon);">{{ total_faq | default(0) }}</div>
+        <div class="text-muted text-sm">FAQ сгенерировано</div>
+    </div>
+</div>
+
+<!-- Список сайтов -->
+<h2 class="mb-2">Мои сайты</h2>
+
+{% if sites %}
+<div class="grid-2">
+    {% for site in sites %}
+    <a href="/dashboard/sites/{{ site.id }}" style="text-decoration:none;">
+        <div class="card">
+            <div class="flex-between mb-2">
+                <strong style="font-size:1rem;">{{ site.domain or site.url[:40] }}</strong>
+                {% if site.neuro_card_active %}
+                    <span class="badge badge-active">Активна</span>
+                {% else %}
+                    <span class="badge badge-paused">Приостановлена</span>
+                {% endif %}
+            </div>
+            <div class="text-muted text-sm mb-2">{{ site.site_type or 'general' }}</div>
+            <div class="flex-between">
+                <span class="text-muted text-sm">FAQ: {{ site.faq_count | default(0) }} шт.</span>
+                <span style="color:var(--accent-glow); font-size:0.8rem;">Открыть →</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card text-center" style="padding:60px 20px;">
+    <div style="font-size:3rem; margin-bottom:16px;">🛸</div>
+    <h2>Готовы запустить первый сайт?</h2>
+    <p class="text-muted mb-3">Добавьте сайт — и через 24 часа Алиса начнёт его видеть</p>
+    <a href="/dashboard/sites/new" class="btn btn-primary">+ Добавить сайт</a>
+</div>
+{% endif %}
+
+<!-- Тариф -->
+<div class="card mt-3" style="text-align:center;">
+    <div class="flex-between">
+        <div>
+            <strong>Тариф: {{ tariff | default("trial") }}</strong>
+            <p class="text-muted text-sm">Подписка активна</p>
+        </div>
+        <a href="/dashboard/settings" class="btn btn-ghost text-sm">Управлять →</a>
+    </div>
+</div>
+{% endblock %}

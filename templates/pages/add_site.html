@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Добавить сайт — AI Visibility Optimizer{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-link">Дашборд</a>
+        <a href="/dashboard/sites/new" class="nav-link active">+ Добавить сайт</a>
+        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+    </div>
+</div>
+
+<div class="card" style="max-width:500px;margin:40px auto;">
+    <h2>Добавить сайт</h2>
+    <p class="text-muted text-sm mb-2">Введите URL — мы проанализируем сайт и создадим нейро-карточку</p>
+    <form method="POST">
+        <div class="form-group">
+            <label class="form-label">URL сайта</label>
+            <input type="text" name="url" class="form-input" placeholder="https://example.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Анализировать и создать</button>
+    </form>
+</div>
+{% endblock %}

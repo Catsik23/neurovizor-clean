@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Настройки — AI Visibility Optimizer{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-link">Дашборд</a>
+        <a href="/dashboard/settings" class="nav-link active">Настройки</a>
+        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+    </div>
+</div>
+
+<div class="card" style="max-width:500px;margin:40px auto;">
+    <h2>Настройки профиля</h2>
+    
+    <div class="mb-3" style="border-bottom:1px solid var(--border);padding-bottom:16px;">
+        <p class="text-muted text-sm">Email</p>
+        <strong>{{ user.email }}</strong>
+    </div>
+    
+    <div class="mb-3" style="border-bottom:1px solid var(--border);padding-bottom:16px;">
+        <p class="text-muted text-sm">Тариф</p>
+        <strong>{{ user.tariff or 'trial' }}</strong>
+    </div>
+    
+    <div class="mb-3" style="border-bottom:1px solid var(--border);padding-bottom:16px;">
+        <p class="text-muted text-sm">Подписка</p>
+        <strong>{{ 'Активна' if user.subscription_active in (True, 'true', 'True', 1) else 'Неактивна' }}</strong>
+    </div>
+    
+    <p class="text-muted text-sm mt-3">Все операции с ИИ выполняются через наш ключ. Вам не нужно подключать свой.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+import os
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+import numpy as np
+from functools import lru_cache
+_model = None
+
+def _get_model():
+    global _model
+    if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            _model = SentenceTransformer('/opt/neurovizor/models/e5-small')
+            log_event("info", "embeddings_model_loaded", model="multilingual-e5-small")
+        except Exception as e:
+            log_event("error", "embeddings_model_load_failed", error=str(e))
+            raise RuntimeError(f"Не удалось загрузить модель эмбеддингов: {e}")
+    return _model
+
+def embed_text(text: str) -> list:
+    if not text or not text.strip():
+        return [0.0] * 384
+    try:
+        model = _get_model()
+        embedding = model.encode(text.strip(), normalize_embeddings=True)
+        return embedding.tolist()
+    except Exception as e:
+        log_event("error", "embed_text_failed", error=str(e), text_preview=text[:100])
+        raise
+
+def embed_query(query: str) -> list:
+    return embed_text(f"query: {query}")
+
+def embed_document(text: str) -> list:
+    return embed_text(f"passage: {text}")
+
+@lru_cache(maxsize=1000)
+def embed_cached(text: str) -> tuple:
+    return tuple(embed_document(text))
+
+def cosine_similarity(vec1: list, vec2: list) -> float:
+    return float(np.dot(vec1, vec2))
+
+exit
+

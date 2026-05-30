@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}{{ site.domain }} — AI Visibility Optimizer{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-link">Дашборд</a>
+        <a href="/dashboard/sites/new" class="nav-link">+ Добавить сайт</a>
+        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+    </div>
+</div>
+
+<!-- Заголовок -->
+<div class="mb-2">
+    <h1 style="font-size:1.5rem; margin-bottom:0;">{{ site.domain or site.url }}</h1>
+    <p class="text-muted text-sm">{{ site.site_type or 'general' }}</p>
+</div>
+
+<!-- Панель "полицейская мигалка" -->
+{% if site.neuro_card_url and site.neuro_card_active %}
+<a href="{{ site.neuro_card_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+    <div class="neuro-panel active">
+        <div class="neuro-btn">НЕЙРО-КАРТОЧКА</div>
+        <div class="neuro-status on">● АКТИВНА</div>
+    </div>
+</a>
+{% else %}
+<div class="neuro-panel inactive">
+    <div class="neuro-btn off">НЕЙРО-КАРТОЧКА</div>
+    <div class="neuro-status off">● НЕАКТИВНА</div>
+</div>
+{% endif %}
+
+<style>
+    .neuro-panel {
+        display: flex;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .neuro-panel.active {
+        border: 1px solid transparent;
+        border-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee) 1;
+        animation: policePulse 2s ease-in-out infinite;
+    }
+    .neuro-panel.inactive {
+        border: 1px solid rgba(255,255,255,0.06);
+        cursor: not-allowed;
+    }
+    .neuro-btn {
+        flex: 2;
+        padding: 14px 20px;
+        text-align: center;
+        background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .neuro-btn.off {
+        background: rgba(255,255,255,0.06);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: #555;
+    }
+    .neuro-status {
+        flex: 1;
+        padding: 14px 16px;
+        text-align: center;
+        font-size: 0.75rem;
+    }
+    .neuro-status.on {
+        background: rgba(52,211,153,0.1);
+        color: #34d399;
+    }
+    
+    .faq-hidden { display: none; }
+    .neuro-status.off {
+        background: rgba(255,255,255,0.03);
+        color: #555;
+    }
+    @keyframes policePulse {
+        0%, 100% { box-shadow: 0 0 10px rgba(124,58,237,0.2); }
+        50% { box-shadow: 0 0 20px rgba(124,58,237,0.4), 0 0 40px rgba(34,211,238,0.1); }
+    }
+</style>
+
+<div class="grid-2">
+    <div>
+        <div class="card mb-1">
+            <div class="flex-between mb-1">
+                <h2 style="font-size:1rem; margin-bottom:0;">FAQ</h2>
+                <span class="text-muted text-sm">{{ site.faq_count | default(0) }} шт.</span>
+            </div>
+            
+            {% if site.faq_list %}
+                <div id="faqContainer">
+                {% for item in site.faq_list %}
+                <div class="faq-item {% if loop.index > 4 %}faq-hidden{% endif %}"  onclick="this.classList.toggle('open')">
+                    <div class="faq-q" style="padding:8px 12px; font-size:0.8rem;">{{ item.q | e }} <span>▾</span></div>
+                    <div class="faq-a">{{ item.a | e | replace("
+", "<br>"|safe) }}</div>
+                </div>
+                {% endfor %}
+                </div>
+                {% if site.faq_list|length > 4 %}
+                <button class="btn btn-ghost text-sm w-full mt-1" onclick="toggleAllFaq()" id="faqToggleBtn">Показать ещё {{ site.faq_list|length - 4 }} ↓</button>
+                {% endif %}
+                <script>
+                    (function() {
+                        var faqExpanded = false;
+                        window.toggleAllFaq = function() {
+                            faqExpanded = !faqExpanded;
+                            document.querySelectorAll('.faq-hidden').forEach(function(el) {
+                                el.style.display = faqExpanded ? 'block' : 'none';
+                            });
+                            document.getElementById('faqToggleBtn').innerHTML = faqExpanded ? 'Скрыть ↑' : 'Показать ещё {{ site.faq_list|length - 4 }} ↓';
+                        };
+                    })();
+                </script>
+            {% else %}
+                <p class="text-muted text-sm">Ещё не сгенерирован</p>
+            {% endif %}
+        </div>
+
+        <div class="card mb-1">
+            <h2 style="font-size:1rem; margin-bottom:8px;">Виджет</h2>
+            <code style="display:block;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;font-size:0.7rem;color:var(--neon);">&lt;script src="https://ai-site-bot.onrender.com/widget.js?id={{ site.id }}"&gt;&lt;/script&gt;</code>
+            <button class="btn btn-ghost text-sm mt-1 w-full" data-script="<script src='https://ai-site-bot.onrender.com/widget.js?id={{ site.id | e }}'></script>" onclick="navigator.clipboard.writeText(this.dataset.script)">Скопировать</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="card mb-1">
+            <h2 style="font-size:1rem; margin-bottom:8px;">Статус</h2>
+            <div class="flex-between" style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                <span class="text-muted text-sm">Тип</span>
+                <span class="text-sm">{{ site.site_type or 'general' }}</span>
+            </div>
+            <div class="flex-between" style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                <span class="text-muted text-sm">FAQ</span>
+                <span class="text-sm">{{ site.faq_count | default(0) }} шт.</span>
+            </div>
+            <div class="flex-between" style="padding:4px 0;">
+                <span class="text-muted text-sm">Добавлен</span>
+                <span class="text-sm">{{ site.created_at[:10] if site.created_at else '?' }}</span>
+            </div>
+        </div>
+
+        <div class="card mb-1" style="border-color: rgba(248,113,113,0.2);">
+            <form method="POST" action="/dashboard/sites/{{ site.id }}/delete" data-domain="{{ site.domain | e }}" onsubmit="return confirm('Удалить сайт ' + this.dataset.domain + '?');">
+                <button type="submit" class="btn btn-danger w-full" style="padding:8px 16px; font-size:0.75rem;">Удалить сайт</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

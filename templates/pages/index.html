@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% block title %}AI Visibility Optimizer — Алиса видит{% endblock %}
+{% block content %}
+<style>
+    .hero { text-align: center; padding: 50px 16px 30px; }
+    .hero h1 { line-height: 1.15; }
+    .hero .neon-text { color: var(--neon); text-shadow: 0 0 20px rgba(192,132,252,0.5); }
+    .hero .subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        max-width: 520px;
+        margin: 12px auto 24px;
+        font-family: var(--font-mono);
+    }
+
+    .audit-card { max-width: 600px; margin: 0 auto 40px; }
+
+    .score-ring { width: 90px; height: 90px; margin: 0 auto 10px; position: relative; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring .bg-circle { fill: none; stroke: rgba(140,120,255,0.15); stroke-width: 4; }
+    .score-ring .progress-circle { fill: none; stroke: url(#neonGrad); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
+    .score-number { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-mono); font-size: 1.5rem; font-weight: 900; color: var(--text-bright); }
+
+    .loss-text { color: var(--danger); font-weight: 700; font-size: 0.85rem; margin-top: 4px; }
+
+    .show-more-btn {
+        background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+        padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;
+        font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; margin-top: 8px;
+        transition: var(--transition);
+    }
+    .show-more-btn:hover { border-color: var(--neon); color: var(--neon); }
+
+    .tariff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 780px; margin: 0 auto 50px; }
+    .tariff-card { text-align: center; padding: 24px 14px 20px; display: flex; flex-direction: column; }
+    .tariff-card.featured { border-color: var(--border-active); box-shadow: 0 0 35px rgba(124,58,237,0.1); }
+    .tariff-badge { margin-bottom: 8px; min-height: 20px; }
+    .tariff-price { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 900; margin: 6px 0; min-height: 2.2rem; }
+    .tariff-name { font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; min-height: 1.2rem; }
+    .tariff-card.featured .tariff-name { color: var(--neon); }
+    .tariff-features { color: var(--text-muted); font-size: 0.75rem; line-height: 1.5; margin: 8px 0 16px; flex: 1; min-height: 60px; }
+    .tariff-card .btn { font-family:'Inter',sans-serif; margin-top: auto; }
+
+    .btn-cyber-pulse {
+        background: transparent; border: 1px solid var(--neon-soft); color: var(--neon-soft);
+        position: relative; overflow: hidden; font-weight: 700;
+    }
+    .btn-cyber-pulse::before, .btn-cyber-pulse::after {
+        content: ''; position: absolute; top: 0; width: 50%; height: 100%;
+        background: linear-gradient(90deg, rgba(192,132,252,0.3), transparent);
+        animation: cyberConverge 2s ease-in-out infinite;
+    }
+    .btn-cyber-pulse::before { left: -50%; }
+    .btn-cyber-pulse::after { right: -50%; animation-delay: 1s; transform: scaleX(-1); }
+    @keyframes cyberConverge {
+        0% { transform: translateX(0); opacity: 0; }
+        40% { opacity: 1; } 60% { opacity: 1; }
+        100% { transform: translateX(100%); opacity: 0; }
+    }
+    .btn-cyber-pulse:hover { box-shadow: 0 0 20px rgba(192,132,252,0.35), 0 0 2px rgba(192,132,252,0.5) inset; color: #fff; border-color: var(--neon); }
+
+    .btn-neon-premium {
+        background: var(--gradient-btn); color: var(--text-bright); border: 2px solid var(--neon);
+        position: relative; overflow: hidden; font-weight: 700;
+        animation: neonGlow 2s ease-in-out infinite;
+    }
+    @keyframes neonGlow {
+        0%,100% { box-shadow: 0 0 12px rgba(192,132,252,0.3), 0 0 2px rgba(255,255,255,0.1) inset; }
+        50% { box-shadow: 0 0 28px rgba(192,132,252,0.55), 0 0 6px rgba(192,132,252,0.35) inset, 0 0 50px rgba(192,132,252,0.15); }
+    }
+    .btn-neon-premium::after {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+        animation: diagonalSweep 3s ease-in-out infinite;
+    }
+    @keyframes diagonalSweep {
+        0% { transform: translateX(-100%) translateY(-100%); }
+        100% { transform: translateX(100%) translateY(100%); }
+    }
+
+    .btn-soft-glow {
+        background: var(--gradient-btn); color: var(--text-bright); border: 1px solid rgba(192,132,252,0.3);
+        position: relative; overflow: hidden; font-weight: 700;
+    }
+    .btn-soft-glow::after {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+        animation: diagonalSweep 3.5s ease-in-out infinite;
+    }
+    .btn-soft-glow:hover { box-shadow: 0 0 20px rgba(124,58,237,0.35); }
+
+
+    /* Чат в стиле киберпанк */
+    .cyber-chat {
+        border: 1px solid var(--border-active);
+        box-shadow: 0 0 20px rgba(124,58,237,0.1), inset 0 0 20px rgba(0,0,0,0.2);
+    }
+    .chat-input-cyber:focus {
+        border-color: var(--neon);
+        box-shadow: 0 0 10px rgba(192,132,252,0.2);
+    }
+    .chat-send-btn:hover {
+        box-shadow: 0 0 25px rgba(124,58,237,0.5) !important;
+        transform: scale(1.02);
+    }
+    .chat-send-btn:active {
+        transform: scale(0.95);
+    }
+    /* Стили сообщений в чате */
+    .msg-user {
+        align-self: flex-end;
+        background: var(--gradient-btn);
+        color: white;
+        padding: 10px 14px;
+        border-radius: 12px 12px 4px 12px;
+        max-width: 80%;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 8px rgba(124,58,237,0.2);
+    }
+    .msg-bot {
+        align-self: flex-start;
+        background: rgba(192,132,252,0.1);
+        border: 1px solid rgba(192,132,252,0.2);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 12px 12px 12px 4px;
+        max-width: 80%;
+        font-size: 0.85rem;
+    }
+    /* Кастомный скроллбар */
+    #demoChat::-webkit-scrollbar { width: 4px; }
+    #demoChat::-webkit-scrollbar-track { background: transparent; }
+    #demoChat::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 2px; }
+
+    
+    /* Слайдер */
+    .slider-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .slider-dot.active {
+        background: var(--neon);
+        box-shadow: 0 0 8px rgba(192,132,252,0.5);
+    }
+
+    @media (max-width: 768px) {
+        .tariff-grid { grid-template-columns: 1fr; max-width: 320px; }
+        .hero { padding: 30px 8px 20px; }
+        .audit-card { margin: 0 0 30px; }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .cyber-gradient {
+        background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
+        background-size: 300% 100%;
+        animation: cyberFlow 3s ease infinite;
+    }
+    @keyframes cyberFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .tariff-name-grad {
+        font-family: 'Orbitron', 'JetBrains Mono', monospace;
+        font-size: 1.3rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+</style>
+
+<div class="hero">
+    <h1><span class="neon-text">Алиса</span> видит<br>твой бизнес?</h1>
+    <p class="subtitle">Нейро-карточка в 3 клика. Без правок на сайте.</p>
+    <div class="flex flex-center flex-wrap" style="gap:8px;">
+        <a href="/register" class="btn btn-primary">Активировать</a>
+        <a href="/login" class="btn btn-ghost">Вход</a>
+    </div>
+</div>
+
+<div class="card audit-card">
+    <h2 style="text-align:center;">Сканирование</h2>
+    <p class="text-muted text-center mb-2 text-sm">Введи URL — узнай нейро-видимость</p>
+    <form id="auditForm">
+        <div class="flex" style="gap:6px;">
+            <input type="text" class="form-input" id="urlInput" placeholder="site.ru" required>
+            <button type="submit" class="btn btn-cyber-pulse" style="background: transparent; border: 1px solid transparent; border-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee) 1; color: transparent; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);">Сканировать</button>
+        </div>
+    </form>
+    <div id="loadingBlock" style="display:none; text-align:center; padding:30px 0;">
+        <div style="width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--neon);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto 12px;"></div>
+        <p class="text-muted text-sm">Анализ...</p>
+    </div>
+    <div id="resultBlock" style="display:none;">
+        <div class="score-ring">
+            <svg width="90" height="90" viewBox="0 0 90 90">
+                <defs><linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
+                <circle class="bg-circle" cx="45" cy="45" r="38"/>
+                <circle class="progress-circle" id="progressCircle" cx="45" cy="45" r="38" stroke-dasharray="238.8" stroke-dashoffset="238.8"/>
+            </svg>
+            <div class="score-number" id="scoreNumber">0%</div>
+        </div>
+        <p class="text-center mb-1 text-sm" id="scoreMessage"></p>
+        <p class="text-center loss-text" id="lossText" style="display:none;"></p>
+        <div class="grid-2 mb-2">
+            <div class="card" style="text-align:center;padding:10px;"><div style="font-size:1.2rem;font-weight:800;color:var(--neon);" id="faqCount">0</div><div class="text-muted text-sm">FAQ сгенерировано</div></div>
+        </div>
+        
+        <div id="aliceSection" style="display:none; margin-top: 20px; background: rgba(124,58,237,0.05); border: 1px solid var(--border-active); border-radius: var(--radius); padding: 16px;">
+            <h3 class="mb-2 text-sm" style="color: var(--neon); font-family: var(--font-mono);">🔮 Что ответит Алиса</h3>
+            <div class="compare-row">
+                <div class="compare-card before">
+                    <div class="compare-label bad">⬤ Сейчас</div>
+                    <div class="compare-text" id="aliceBefore"><em>Генерируем...</em></div>
+                </div>
+                <div class="compare-card after">
+                    <div class="compare-label good">⬤ С нейро-карточкой</div>
+                    <div class="compare-text" id="aliceAfter"><em>Генерируем...</em></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="noFaqMessage" style="display:none; text-align:center; padding:20px; color:var(--text-muted);">FAQ не сгенерирован. Попробуйте другой сайт.</div>
+        <div id="faqSection" style="display:none;">
+            <h3 class="mb-2 text-sm">Сгенерированные FAQ</h3>
+            <div id="faqList"></div>
+            <div class="text-center">
+                <button class="show-more-btn" id="showMoreFaq" style="display:none;" onclick="toggleFaq()">Показать ещё <span id="faqRemaining">7</span> вопросов</button>
+            </div>
+        </div>
+
+        <div id="chatSection" style="display:none; margin-top: 24px;">
+            <h3 class="mb-2 text-sm" style="text-align:center;">Попробуй <span style="color:var(--neon);">AI</span>-SITE-BOT на своём сайте</h3>
+            <p class="text-muted text-sm mb-2">Бот отвечает на основе данных с сайта</p>
+            <div class="card cyber-chat" style="padding:0; overflow:hidden;">
+                <!-- Окно сообщений -->
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;" id="chatHints">
+                <span onclick="askHint('Какие у вас цены?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">💰 Цены</span>
+                <span onclick="askHint('Как заказать?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">📦 Заказ</span>
+                <span onclick="askHint('Какая доставка?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">🚚 Доставка</span>
+                <span onclick="askHint('Как связаться?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">📞 Контакты</span>
+            </div>
+            <div id="demoChat" style="height:280px; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.3); scrollbar-width:thin; scrollbar-color:var(--neon) transparent;">
+                </div>
+                <!-- Полоска-разделитель с неоном -->
+                <div style="height:1px; background:linear-gradient(90deg, transparent, var(--neon), transparent); opacity:0.5;"></div>
+                <!-- Поле ввода -->
+                <div style="display:flex; gap:0; padding:8px; background:rgba(10,8,30,0.9);">
+                    <input type="text" class="chat-input-cyber" id="chatInput" placeholder="Спросите бота..."  style="flex:1; padding:12px 16px; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-right:none; border-radius:var(--radius-sm) 0 0 var(--radius-sm); color:var(--text-bright); font-family:var(--font-mono); font-size:0.85rem; outline:none; transition:var(--transition);">
+                    <button onclick="sendChat()" id="chatSendBtn" class="chat-send-btn" style="padding:12px 18px; background:var(--gradient-btn); border:none; border-radius:0 var(--radius-sm) var(--radius-sm) 0; color:white; cursor:pointer; font-size:1.2rem; transition:all 0.2s ease; box-shadow:0 0 15px rgba(124,58,237,0.3);">→</button>
+                </div>
+            </div>
+            <p class="text-muted text-sm mt-1" id="chatCounter">Осталось: 5 вопросов</p>
+        </div>
+
+        <div class="text-center mt-2">
+            <a href="/register" class="btn btn-soft-glow">Подключить (990 ₽/мес)</a>
+            <p class="text-muted text-sm mt-1">7 дней бесплатно</p>
+        </div>
+    </div>
+</div>
+
+
+        
+        
+        <!-- Как это работает -->
+        <div class="how-it-works" style="max-width:600px; margin: 0 auto;">
+            <h3 class="text-center mb-2" style="font-family:var(--font-mono); font-weight:800; font-size:1.5rem; text-transform:uppercase; letter-spacing:-0.3px;">КАК ЭТО РАБОТАЕТ</h3>
+            <div class="slider-container" style="position:relative; overflow:hidden; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); backdrop-filter:blur(16px);">
+                <div id="sliderTrack" style="display:flex; transition:transform 0.5s ease;">
+                    <!-- Слайд 1 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Сканирование</span> сайта</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Мы анализируем ваш сайт и собираем всю ключевую информацию</p>
+                    </div>
+                    <!-- Слайд 2 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Плотный слой</span> захвата</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Генерация 10 FAQ для сайта и до 90 FAQ для нейро-карточки на основе реальных запросов вашей ниши</p>
+                    </div>
+                    <!-- Слайд 3 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Нейро</span>-карточка</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Создаём внешнюю страницу со структурированными данными, которую понимают нейросети</p>
+                    </div>
+                    <!-- Слайд 4 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">AEO</span>-оптимизация</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Answer Engine Optimization — делаем ваш сайт источником ответов для Алисы и голосовых помощников</p>
+                    </div>
+                    <!-- Слайд 5 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">GEO</span>-продвижение</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Generative Engine Optimization — ваш бренд цитируют Яндекс.Нейро и Алиса</p>
+                    </div>
+                    <!-- Слайд 6 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Алиса</span> отвечает</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Даже на непрямой запрос Алиса находит нейро-карточку, видит FAQ и отвечает</p>
+                    </div>
+                    <!-- Слайд 7 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Чат-бот</span> как ассистент</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">AI-SITE-BOT обучен на вашем сайте и отвечает клиентам 24/7. Как личная Алиса для вашего бизнеса</p>
+                    </div>
+                    <!-- Слайд 8 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Внешний</span> контур</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Нейро-карточка и чат-бот работают снаружи. На сайте — только одна строка кода для виджета. Все изменения обратимы</p>
+                    </div>
+                    <!-- Слайд 9 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">UGC</span>-пакет</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">До 50 генераций в месяц для любых площадок: VK, Telegram, Яндекс.Карты, 2ГИС, Avito, VC.ru. Продвижение вашего продукта</p>
+                    </div>
+                    <!-- Слайд 10 -->
+                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">VK</span> Mini App</div>
+                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Мини-приложение, которое подстроится под ваш бизнес. Адвокату — секретарь, продавцу — витрина, салону — администратор</p>
+                    </div></div>
+                </div>
+                <div style="display:flex; justify-content:center; gap:8px; padding:12px;">
+                    <span class="slider-dot active" onclick="goToSlide(0)"></span>
+                    <span class="slider-dot" onclick="goToSlide(1)"></span>
+                    <span class="slider-dot" onclick="goToSlide(2)"></span>
+                    <span class="slider-dot" onclick="goToSlide(3)"></span>
+                    <span class="slider-dot" onclick="goToSlide(4)"></span>
+                    <span class="slider-dot" onclick="goToSlide(5)"></span>
+                    <span class="slider-dot" onclick="goToSlide(6)"></span>
+                    <span class="slider-dot" onclick="goToSlide(7)"></span>
+                    <span class="slider-dot" onclick="goToSlide(8)"></span>
+                    <span class="slider-dot" onclick="goToSlide(9)"></span>
+                </div>
+            </div>
+        </div>
+
+<div class="tariff-grid" style="margin-top: 30px;">
+    <div class="card tariff-card featured">
+        <div class="tariff-badge"><span class="badge badge-trial">Пробный</span></div>
+        <div class="tariff-name-grad">Пробный</div>
+        <div class="tariff-price" style="font-size:2.5rem;">0 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
+        <div class="tariff-features">FAQ онлайн на 7 дней</div>
+        <a href="/register" class="btn btn-cyber-pulse w-full cyber-gradient">Выбрать</a>
+    </div>
+    <div class="card tariff-card">
+        <div class="tariff-badge">&nbsp;</div>
+        <div class="tariff-name-grad">Базовый</div>
+        <div class="tariff-price" style="font-size:2.5rem;">990 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
+        <div class="tariff-features">FAQ + Нейро-карточка<br>Чат на сайте</div>
+        <a href="/register" class="btn btn-neon-premium w-full cyber-gradient">Выбрать</a>
+    </div>
+    <div class="card tariff-card">
+        <div class="tariff-badge">&nbsp;</div>
+        <div class="tariff-name-grad">Профессиональный</div>
+        <div class="tariff-price" style="font-size:2.5rem;">1990 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
+        <div class="tariff-features">Всё + VK Mini App<br>UGC-размещение</div>
+        <a href="/register" class="btn btn-primary w-full cyber-gradient">Выбрать</a>
+    </div>
+</div>
+
+<script>
+    let allFaq = [];
+    let showingAll = false;
+    let chatQuestionsLeft = 5;
+    let currentDomain = '';
+    let currentSiteId = '';
+
+    document.getElementById('chatInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendChat(); });
+    function askHint(question) { document.getElementById('chatInput').value = question; sendChat(); }
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if (!msg || chatQuestionsLeft <= 0) return;
+        const demoChat = document.getElementById('demoChat');
+        demoChat.innerHTML += '<div class="msg-user">' + msg + '</div>';
+        input.value = '';
+        chatQuestionsLeft--;
+        document.getElementById('chatCounter').textContent = 'Осталось: ' + chatQuestionsLeft + ' вопросов';
+        if (chatQuestionsLeft <= 0) {
+            document.getElementById('chatInput').disabled = true;
+            document.getElementById('chatSendBtn').disabled = true;
+            document.getElementById('chatCounter').textContent = 'Лимит исчерпан. Зарегистрируйтесь — первые 7 дней бесплатно.';
+        }
+        fetch('/bot/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({question: msg, domain: currentDomain})
+        })
+        .then(r => r.json())
+        .then(data => {
+            demoChat.innerHTML += '<div class="msg-bot">🤖 ' + (data.answer || '...') + '</div>';
+            demoChat.scrollTop = demoChat.scrollHeight;
+        })
+        .catch(() => {
+            demoChat.innerHTML += '<div class="msg-bot" style="color:var(--danger);">🤖 Ошибка. Попробуйте позже.</div>';
+        });
+    }
+
+    function generateAliceAnswers(domain, title, faq) {
+        const aliceSection = document.getElementById('aliceSection');
+        aliceSection.style.display = 'block';
+        const beforeEl = document.getElementById('aliceBefore');
+        const questions = faq.slice(0, 2).map(function(f) { return f.q; });
+        const randomQ = questions[Math.floor(Math.random() * questions.length)] || 'ваши услуги';
+        beforeEl.innerHTML = '🗣️ <em>«Алиса, ' + randomQ + '»</em><br><br>🤖 <em>«Я не нашла информацию о компании «' + title + '» в своём поиске.»</em>';
+        const afterEl = document.getElementById('aliceAfter');
+        const answer = faq.length > 0 ? faq[0].a : 'Вся информация доступна на сайте.';
+        afterEl.innerHTML = '🗣️ <em>«Алиса, ' + randomQ + '»</em><br><br>🤖 <em>«По данным с сайта «' + title + '»: ' + answer.substring(0, 120) + '...»</em>';
+    }
+
+    document.getElementById('auditForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = document.getElementById('urlInput').value;
+        document.getElementById('loadingBlock').style.display = 'block';
+        document.getElementById('resultBlock').style.display = 'none';
+        try {
+            const formData = new FormData(); formData.append('url', url);
+            const response = await fetch('/demo', { method: 'POST', body: formData });
+            const data = await response.json();
+            document.getElementById('loadingBlock').style.display = 'none';
+            document.getElementById('resultBlock').style.display = 'block';
+            if (data.success) {
+                const score = data.ai_visibility_score || 0;
+                const circle = document.getElementById('progressCircle');
+                circle.style.strokeDashoffset = 238.8 - (score / 100) * 238.8;
+                let current = 0;
+                const step = score / 30;
+                const counter = setInterval(() => {
+                    current += step;
+                    if (current >= score) { current = score; clearInterval(counter); }
+                    document.getElementById('scoreNumber').textContent = Math.round(current) + '%';
+                }, 25);
+                document.getElementById('scoreMessage').textContent = score >= 70 ? '✅ Высокая (70-100%)' : score >= 40 ? '⚠️ Средняя (40-69%)' : '🔴 Критическая (0-39%)';
+                const lossEl = document.getElementById('lossText');
+                if (score < 70) {
+                    lossEl.textContent = 'Вы теряете клиентов по ' + (100 - score) + '% запросов. Алиса не находит ваш сайт.';
+                    lossEl.style.display = 'block';
+                } else {
+                    lossEl.style.display = 'none';
+                }
+                document.getElementById('faqCount').textContent = (data.faq || []).length;
+                allFaq = data.faq || [];
+                showingAll = false;
+                renderFaq(allFaq.slice(0, 3));
+                const showMoreBtn = document.getElementById('showMoreFaq');
+                if (allFaq.length > 3) {
+                    document.getElementById('faqRemaining').textContent = allFaq.length - 3;
+                    showMoreBtn.style.display = 'inline-block';
+                } else {
+                    showMoreBtn.style.display = 'none';
+                }
+                if (allFaq.length > 0) {
+                    document.getElementById('faqSection').style.display = 'block';
+                    document.getElementById('noFaqMessage').style.display = 'none';
+                    generateAliceAnswers(data.domain, data.title, allFaq);
+                } else {
+                    document.getElementById('faqSection').style.display = 'none';
+                    document.getElementById('noFaqMessage').style.display = 'block';
+                }
+                document.getElementById('chatSection').style.display = 'block';
+                currentDomain = data.domain;
+                currentSiteId = data.site_id || '';
+                chatQuestionsLeft = 5;
+                document.getElementById('chatCounter').textContent = 'Осталось: 5 вопросов';
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('chatSendBtn').disabled = false;
+                document.getElementById('demoChat').innerHTML = '';
+            }
+        } catch (error) {
+            document.getElementById('loadingBlock').style.display = 'none';
+            document.getElementById('resultBlock').style.display = 'block';
+            document.getElementById('scoreMessage').textContent = 'Сервер временно недоступен. Попробуйте позже.';
+        }
+    });
+
+    let currentSlide = 0;
+    const totalSlides = 10;
+    function goToSlide(n) {
+        currentSlide = n;
+        document.getElementById('sliderTrack').style.transform = 'translateX(-' + (n * 100) + '%)';
+        document.querySelectorAll('.slider-dot').forEach(function(dot, i) { dot.classList.toggle('active', i === n); });
+    }
+    setInterval(function() { currentSlide = (currentSlide + 1) % totalSlides; goToSlide(currentSlide); }, 7000);
+
+    function escapeHtml(str) { var div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    function renderFaq(faqSubset) {
+        const faqList = document.getElementById('faqList');
+        let html = '';
+        for (let i = 0; i < faqSubset.length; i++) {
+            html += '<div class="faq-item" onclick="this.classList.toggle(\'open\')"><div class="faq-q"><span>' + escapeHtml(faqSubset[i].q) + '</span><span>▾</span></div><div class="faq-a">' + escapeHtml(faqSubset[i].a) + '</div></div>';
+        }
+        faqList.innerHTML = html;
+    }
+
+    function toggleFaq() {
+        showingAll = !showingAll;
+        if (showingAll) {
+            renderFaq(allFaq);
+            document.getElementById('showMoreFaq').textContent = 'Скрыть';
+        } else {
+            renderFaq(allFaq.slice(0, 3));
+            document.getElementById('showMoreFaq').innerHTML = 'Показать ещё <span id="faqRemaining">' + (allFaq.length - 3) + '</span> вопросов';
+        }
+    }
+</script>
+{% endblock %}
