@@ -9,4 +9,3 @@ static/neurocards/
 *.egg-info/
 dist/
 build/
-models/

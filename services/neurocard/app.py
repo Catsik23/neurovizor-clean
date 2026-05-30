@@ -83,33 +83,36 @@ def bot_chat():
     context = ''
     site_type = 'general'
 
-    # Ищем сайт в Supabase
-    if domain:
+    # Ищем сайт и получаем релевантные чанки
+    site_id = request.json.get('site_id', '').strip()
+    if domain or site_id:
         try:
-            # Кэш 5 минут
-            cache_key = f'bot_{domain}'
-            cached = _cache.get(cache_key, {})
-            if cached and time.time() - cached.get('ts', 0) < 300:
-                site_data = cached['data']
-            else:
-                site = supabase.table('sites').select('id,site_type').eq('domain', domain).execute()
-                _cache[cache_key] = {'data': site.data, 'ts': time.time()}
-            if site_data:
-                site_id = site_data[0]['id']
-                site_type = site_data[0].get('site_type', 'general')
-                chunk_key = f'chunks_{site_id}'
-                cached_chunks = _cache.get(chunk_key, {})
-                if cached_chunks and time.time() - cached_chunks.get('ts', 0) < 300:
-                    context = cached_chunks['data']
+            # Если site_id не передан — ищем по домену в sites
+            if not site_id and domain:
+                cache_key = f'bot_{domain}'
+                cached = _cache.get(cache_key, {})
+                if cached and time.time() - cached.get('ts', 0) < 300:
+                    site_data = cached['data']
                 else:
+                    site = supabase.table('sites').select('id,site_type').eq('domain', domain).execute()
+                    site_data = site.data
+                    _cache[cache_key] = {'data': site_data, 'ts': time.time()}
+                if site_data:
+                    site_id = site_data[0]['id']
+                    site_type = site_data[0].get('site_type', 'general')
+            
+            # Если site_id есть — используем векторный поиск
+            if site_id:
+                from shared.ai_client import get_relevant_chunks
+                context = get_relevant_chunks(site_id, question)
+                if not context:
+                    # Fallback: простой поиск по чанкам
                     chunks = supabase.table('knowledge_chunks') \
                         .select('chunk_text') \
                         .eq('site_id', site_id) \
-                        .order('importance_score', desc=True) \
-                        .limit(10).execute()
+                        .limit(5).execute()
                     if chunks.data:
                         context = ' '.join([c['chunk_text'] for c in chunks.data])
-                        _cache[chunk_key] = {'data': context, 'ts': time.time()}
         except Exception as e:
             log_event('bot_context_error', error=str(e), domain=domain)
 

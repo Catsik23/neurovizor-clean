@@ -397,7 +397,7 @@
         fetch('/bot/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({question: msg, domain: currentDomain})
+            body: JSON.stringify({question: msg, domain: currentDomain, site_id: currentSiteId})
         })
         .then(r => r.json())
         .then(data => {
@@ -429,7 +429,7 @@
         try {
             const formData = new FormData(); formData.append('url', url);
             const response = await fetch('/demo', { method: 'POST', body: formData });
-            const data = await response.json();
+            const data = await response.json(); console.log('DEMO RESPONSE:', data);
             document.getElementById('loadingBlock').style.display = 'none';
             document.getElementById('resultBlock').style.display = 'block';
             if (data.success) {

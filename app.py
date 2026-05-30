@@ -69,30 +69,48 @@ def demo():
     demo_site_id = 'demo-' + result['domain']
     try:
         from shared.utils import chunk_text, classify_chunk_topic
-        from shared.supabase import supabase
+        from shared.supabase import get_supabase
         
         # Удаляем старые чанки для этого домена
-        supabase.table('knowledge_chunks').delete().eq('site_id', demo_site_id).execute()
+        get_supabase().table('knowledge_chunks').delete().eq('site_id', demo_site_id).execute()
         
         from shared.embeddings import embed_document
-        print('>>> EMBED START', flush=True)
         chunks = chunk_text(result['text'])
+        
+        # Шаг 1: Все эмбеддинги в памяти
+        chunk_data = []
         for chunk in chunks:
             try:
                 embedding = embed_document(chunk['text'])
             except:
                 embedding = None
-            supabase.table('knowledge_chunks').insert({
+            chunk_data.append({'chunk': chunk, 'embedding': embedding})
+            print('>>> EMBEDDED ' + chunk.get('chunk_type', '?'), flush=True)
+        
+        # Шаг 2: Сохраняем все чанки через прямые HTTP-запросы
+        import requests as req
+        supabase_url = os.environ['SUPABASE_URL'] + '/rest/v1/knowledge_chunks'
+        supabase_headers = {
+            'apikey': os.environ['SUPABASE_KEY'],
+            'Authorization': 'Bearer ' + os.environ['SUPABASE_KEY'],
+            'Content-Type': 'application/json'
+        }
+        for item in chunk_data:
+            payload = {
                 'site_id': demo_site_id,
-                'chunk_text': chunk['text'],
-                'chunk_type': chunk.get('chunk_type', 'paragraph'),
-                'chunk_position': chunk.get('position', 0),
-                'topic': classify_chunk_topic(chunk['text']),
-                'importance_score': 3 if classify_chunk_topic(chunk['text']) in ('pricing', 'delivery', 'contacts') else 1,
-                'char_count': len(chunk['text']),
-                'embedding': embedding
-            }).execute()
-            print('>>> CHUNK SAVED', chunk.get('chunk_type', '?'), flush=True)
+                'chunk_text': item['chunk']['text'],
+                'chunk_type': item['chunk'].get('chunk_type', 'paragraph'),
+                'chunk_position': item['chunk'].get('position', 0),
+                'topic': classify_chunk_topic(item['chunk']['text']),
+                'importance_score': 3 if classify_chunk_topic(item['chunk']['text']) in ('pricing', 'delivery', 'contacts') else 1,
+                'char_count': len(item['chunk']['text']),
+                'embedding': item['embedding']
+            }
+            resp = req.post(supabase_url, json=payload, headers=supabase_headers, timeout=10)
+            if resp.status_code == 201:
+                print('>>> CHUNK SAVED ' + item['chunk'].get('chunk_type', '?'), flush=True)
+            else:
+                print('>>> CHUNK FAILED ' + str(resp.status_code) + ': ' + resp.text[:100], flush=True)
     except Exception as e:
         print('>>> DEMO CHUNK ERROR:', str(e), flush=True)
         log_event('demo_chunk_error', error=str(e), site_id=demo_site_id)
@@ -112,7 +130,7 @@ def admin_errors():
         return jsonify({'error': 'Access denied'}), 403
     """Админ-дашборд ошибок за 24 часа."""
     from datetime import datetime as dt, timedelta
-    from shared.supabase import supabase
+    from shared.supabase import get_supabase
     
     since = (dt.utcnow() - timedelta(hours=24)).isoformat()
     events = supabase.table('events') \
@@ -160,6 +178,33 @@ def payment():
     """Страница оплаты (заглушка)."""
     return render_template('pages/payment.html')
 
+@app.route('/debug/embed')
+def debug_embed():
+    import os
+    try:
+        from shared.embeddings import embed_document
+        r1 = len(embed_document("test1"))
+        r2 = len(embed_document("test2"))
+        return jsonify({"first": r1, "second": r2, "offline": os.environ.get("HF_HUB_OFFLINE")})
+    except Exception as e:
+        return jsonify({"error": str(e), "type": type(e).__name__}), 500
+
+@app.route('/test-embed')
+def test_embed():
+    import os
+    result = {
+        'HF_HUB_OFFLINE': os.environ.get('HF_HUB_OFFLINE'),
+        'TRANSFORMERS_OFFLINE': os.environ.get('TRANSFORMERS_OFFLINE'),
+    }
+    try:
+        from shared.embeddings import embed_document
+        emb = embed_document('test')
+        result['embedding_len'] = len(emb)
+        result['status'] = 'ok'
+    except Exception as e:
+        result['error'] = str(e)
+    return jsonify(result)
+
 @app.route('/health')
 def health():
     try:
@@ -168,6 +213,14 @@ def health():
         return 'ready'
     except:
         return 'loading', 503
+
+# === ПРОГРЕВ МОДЕЛИ ПРИ СТАРТЕ ===
+print(">>> Preloading embedding model...", flush=True)
+import time as _time
+_t0 = _time.time()
+from shared.embeddings import embed_document
+_ = embed_document("model warmup")
+print(f">>> Model ready in {_time.time()-_t0:.1f}s", flush=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

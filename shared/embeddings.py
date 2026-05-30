@@ -1,6 +1,7 @@
 import os
-os.environ["HF_HUB_OFFLINE"] = "1"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
 
 import numpy as np
 from functools import lru_cache
@@ -11,21 +12,11 @@ _model = None
 def _get_model():
     global _model
     if _model is None:
-        try:
-            import psutil
-            available_mb = psutil.virtual_memory().available / 1024 / 1024
-            if available_mb < 600:
-                log_event("warning", "low_memory_for_embeddings", available_mb=available_mb)
-                raise RuntimeError(f"Low memory: {available_mb:.0f}MB, need >600MB")
-        except ImportError:
-            pass
-        try:
-            from sentence_transformers import SentenceTransformer
-            _model = SentenceTransformer('/opt/neurovizor/models/e5-small')
-            log_event("info", "embeddings_model_loaded", model="multilingual-e5-small")
-        except Exception as e:
-            log_event("error", "embeddings_model_load_failed", error=str(e))
-            raise RuntimeError(f"Model load failed: {e}")
+        from sentence_transformers import SentenceTransformer
+        _model = SentenceTransformer('/opt/neurovizor/models/e5-small')
+        # Холостой прогрев
+        _model.encode("warmup", normalize_embeddings=True)
+        log_event("info", "embeddings_model_loaded")
     return _model
 
 def embed_text(text):

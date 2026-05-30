@@ -9,6 +9,12 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Глобальный клиент — инициализируется один раз
+_supabase_client = None
+
 def get_supabase():
-    """Возвращает клиент Supabase. Создаёт новый при необходимости."""
-    return supabase
+    """Возвращает глобальный клиент Supabase."""
+    global _supabase_client
+    if _supabase_client is None:
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    return _supabase_client
