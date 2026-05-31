@@ -1,70 +1,254 @@
 {% extends "base.html" %}
-{% block title %}Дашборд — AI Visibility Optimizer{% endblock %}
+{% block title %}Нейровизор — Дашборд{% endblock %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <div class="nav">
-    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <a href="/dashboard" class="nav-brand">
+        <span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span>
+    </a>
     <div class="nav-links">
-        <a href="/dashboard" class="nav-link active">Дашборд</a>
-        <a href="/dashboard/sites/new" class="nav-link">+ Добавить сайт</a>
+        <a href="/" class="nav-link btn-home" title="На главную">⌂</a>
+        <a href="/dashboard/sites/new" class="nav-link btn-add-site" title="Добавить сайт">+</a>
         <a href="/dashboard/settings" class="nav-link">Настройки</a>
-        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+        <a href="/logout" class="nav-link btn-logout">Выход</a>
     </div>
 </div>
 
-<!-- Метрики -->
-<div class="grid-2 mb-3">
-    <div class="card" style="text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--neon);">{{ sites|length if sites else 0 }}</div>
-        <div class="text-muted text-sm">сайтов добавлено</div>
-    </div>
-    <div class="card" style="text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--neon);">{{ total_faq | default(0) }}</div>
-        <div class="text-muted text-sm">FAQ сгенерировано</div>
-    </div>
-</div>
 
-<!-- Список сайтов -->
-<h2 class="mb-2">Мои сайты</h2>
 
-{% if sites %}
-<div class="grid-2">
-    {% for site in sites %}
-    <a href="/dashboard/sites/{{ site.id }}" style="text-decoration:none;">
-        <div class="card">
-            <div class="flex-between mb-2">
-                <strong style="font-size:1rem;">{{ site.domain or site.url[:40] }}</strong>
-                {% if site.neuro_card_active %}
-                    <span class="badge badge-active">Активна</span>
-                {% else %}
-                    <span class="badge badge-paused">Приостановлена</span>
-                {% endif %}
+<!-- Сайты -->
+<h2 class="section-title">Мои сайты</h2>
+
+<div class="sites-grid">
+    {% if sites %}
+        {% for site in sites %}
+        <a href="/dashboard/sites/{{ site.id }}" class="site-card-link">
+            <div class="site-card {% if site.neuro_card_active %}active{% else %}inactive{% endif %}">
+                <div class="site-domain">{{ site.domain | replace('https://', '') | replace('http://', '') }}</div>
+                <div class="site-type">{{ site.site_type or 'general' }}</div>
+                <div class="site-meta">
+                    <span>FAQ: {{ site.faq_count | default(0) }}</span>
+                    <span class="site-status {% if site.neuro_card_active %}on{% else %}off{% endif %}">
+                        {% if site.neuro_card_active %}● активна{% else %}○ ожидает{% endif %}
+                    </span>
+                </div>
             </div>
-            <div class="text-muted text-sm mb-2">{{ site.site_type or 'general' }}</div>
-            <div class="flex-between">
-                <span class="text-muted text-sm">FAQ: {{ site.faq_count | default(0) }} шт.</span>
-                <span style="color:var(--accent-glow); font-size:0.8rem;">Открыть →</span>
-            </div>
+        </a>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Кнопка Добавить сайт -->
+    <a href="/dashboard/sites/new" class="site-card-link add-new">
+        <div class="site-card add-card">
+            <div class="add-icon">+</div>
+            <div class="add-label">Добавить сайт</div>
         </div>
     </a>
-    {% endfor %}
 </div>
-{% else %}
-<div class="card text-center" style="padding:60px 20px;">
-    <div style="font-size:3rem; margin-bottom:16px;">🛸</div>
-    <h2>Готовы запустить первый сайт?</h2>
-    <p class="text-muted mb-3">Добавьте сайт — и через 24 часа Алиса начнёт его видеть</p>
-    <a href="/dashboard/sites/new" class="btn btn-primary">+ Добавить сайт</a>
-</div>
-{% endif %}
 
-<!-- Тариф -->
-<div class="card mt-3" style="text-align:center;">
-    <div class="flex-between">
-        <div>
-            <strong>Тариф: {{ tariff | default("trial") }}</strong>
-            <p class="text-muted text-sm">Подписка активна</p>
-        </div>
-        <a href="/dashboard/settings" class="btn btn-ghost text-sm">Управлять →</a>
+<!-- График -->
+<div class="chart-card">
+    <h3 class="chart-title">Просмотры за 7 дней</h3>
+    <canvas id="viewsChart"></canvas>
+</div>
+
+<!-- Тарифная сетка -->
+<h2 class="section-title">Тарифы</h2>
+<div class="tariffs-grid">
+    <div class="tariff-card">
+        <div class="tariff-icon">⚡</div>
+        <div class="tariff-name">Нейровизор Lite</div>
+        <div class="tariff-price">399₽/мес</div>
+        <div class="tariff-desc">нейро-карточка + FAQ</div>
+        <div class="tariff-byok">BYOK</div>
+    </div>
+    <div class="tariff-card">
+        <div class="tariff-icon">🔮</div>
+        <div class="tariff-name">Нейровизор</div>
+        <div class="tariff-price">599₽/мес</div>
+        <div class="tariff-desc">нейро-карточка + FAQ</div>
+        <div class="tariff-byok" style="visibility:hidden">-</div>
+    </div>
+    <div class="tariff-card">
+        <div class="tariff-icon">🤖</div>
+        <div class="tariff-name">Нейровизор 2.0</div>
+        <div class="tariff-price">799₽/мес</div>
+        <div class="tariff-desc">+ чат-бот на сайте</div>
+        <div class="tariff-byok">BYOK</div>
+    </div>
+    <div class="tariff-card">
+        <div class="tariff-icon">👑</div>
+        <div class="tariff-name">Нейровизор PRO</div>
+        <div class="tariff-price">999₽/мес</div>
+        <div class="tariff-desc">+ чат-бот на сайте</div>
+        <div class="tariff-byok" style="visibility:hidden">-</div>
+    </div>
+    <div class="tariff-card">
+        <div class="tariff-icon">🚀</div>
+        <div class="tariff-name">Нейровизор BUSINESS</div>
+        <div class="tariff-price">1 599₽/мес</div>
+        <div class="tariff-desc">+ VK Mini App + UGC</div>
+        <div class="tariff-byok" style="visibility:hidden">-</div>
     </div>
 </div>
+
+<script>
+// График
+fetch('/dashboard/api/analytics')
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('viewsChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Просмотры',
+          data: data.values,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0, 255, 136, 0.05)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#c084fc',
+          pointBorderColor: '#00ff88',
+          pointRadius: 3,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#6b7280', font: { family: 'JetBrains Mono' } }, grid: { color: 'rgba(120,100,255,0.06)' } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: '#6b7280' }, grid: { color: 'rgba(120,100,255,0.06)' } }
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+/* === ДАШБОРД СТИЛИ === */
+.logo-neuro { color: #c084fc; font-weight: 900; letter-spacing: 2px; }
+.logo-vizor { color: #00ff88; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(0,255,136,0.4); }
+
+.btn-home {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid rgba(120,100,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: #6b7280; text-decoration: none;
+    transition: all 0.3s;
+}
+.btn-home:hover { border-color: #c084fc; color: #c084fc; box-shadow: 0 0 15px rgba(192,132,252,0.2); }
+.btn-add-site {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, #c084fc20, #00ff8820);
+    border: 1px solid #c084fc40;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700; color: #c084fc;
+    transition: all 0.3s;
+}
+.btn-add-site:hover { background: linear-gradient(135deg, #c084fc40, #00ff8840); box-shadow: 0 0 20px #c084fc40; color: #fff; }
+.btn-logout { color: #ff4d6a !important; opacity: 0.7; }
+.btn-logout:hover { opacity: 1; }
+
+
+
+.section-title { color: #c084fc; font-size: 1.1rem; font-weight: 700; margin: 32px 0 16px; text-transform: uppercase; letter-spacing: 3px; }
+
+/* Сетка сайтов */
+.sites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.site-card-link { text-decoration: none; }
+.site-card {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15);
+    border-radius: 12px; padding: 20px;
+    transition: all 0.3s; cursor: pointer;
+    position: relative; overflow: hidden;
+    min-height: 120px; display: flex; flex-direction: column; justify-content: center;
+}
+.site-card::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0,255,136,0.03) 0%, transparent 70%);
+    opacity: 0; transition: opacity 0.4s;
+}
+.site-card:hover::before { opacity: 1; }
+.site-card:hover { border-color: #00ff8860; box-shadow: 0 0 40px rgba(0,255,136,0.08); transform: translateY(-2px); }
+.site-card.active { border-color: #00ff8840; }
+.site-card.inactive { border-color: rgba(100,100,120,0.2); opacity: 0.7; }
+.site-domain { font-size: 1rem; font-weight: 700; color: #e0e0e0; text-align: center; word-break: break-all; }
+.site-type { color: #6b7280; font-size: 0.75rem; text-align: center; margin: 8px 0; text-transform: uppercase; letter-spacing: 1px; }
+.site-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #6b7280; }
+.site-status.on { color: #00ff88; }
+.site-status.off { color: #4b5563; }
+
+/* Кнопка Добавить */
+.add-card {
+    border: 1px dashed rgba(120,100,255,0.3) !important;
+    background: transparent !important;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.add-card:hover { border-color: #c084fc !important; background: rgba(192,132,252,0.03) !important; }
+.add-icon { font-size: 2.5rem; font-weight: 300; color: #c084fc60; transition: all 0.3s; }
+.add-card:hover .add-icon { color: #c084fc; transform: scale(1.2); }
+.add-label { color: #6b7280; font-size: 0.8rem; margin-top: 8px; }
+
+/* График */
+.chart-card {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15); border-radius: 12px;
+    padding: 24px; margin-bottom: 32px;
+}
+.chart-title { color: #c084fc; font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+
+/* Тарифы */
+.tariffs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.tariff-card {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15);
+    border-radius: 12px; padding: 20px; text-align: center;
+    transition: all 0.3s; position: relative; overflow: hidden;
+}
+.tariff-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #c084fc, #00ff88, transparent);
+    opacity: 0; transition: opacity 0.4s;
+}
+.tariff-card:hover::after { opacity: 1; }
+.tariff-card:hover { border-color: #c084fc40; box-shadow: 0 0 30px rgba(192,132,252,0.1); transform: translateY(-2px); }
+.tariff-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.tariff-name { font-weight: 700; color: #e0e0e0; font-size: 0.85rem; }
+.tariff-price { font-size: 1.3rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; background: linear-gradient(135deg, #c084fc, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 8px 0; }
+.tariff-desc { color: #6b7280; font-size: 0.75rem; }
+.tariff-byok { 
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    padding: 3px 12px; border-radius: 20px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    background: rgba(192,132,252,0.1); color: #c084fc; border: 1px solid rgba(192,132,252,0.2);
+}
+.tariff-card { padding-bottom: 40px; }
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .sites-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .tariffs-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .site-card { padding: 16px; min-height: 100px; }
+    .metric-value { font-size: 1.6rem; }
+}
+@media (max-width: 400px) {
+    .sites-grid { grid-template-columns: 1fr 1fr; }
+    .tariffs-grid { grid-template-columns: 1fr; }
+}
+</style>
 {% endblock %}

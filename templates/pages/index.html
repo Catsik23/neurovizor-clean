@@ -146,7 +146,45 @@
         box-shadow: 0 0 8px rgba(192,132,252,0.5);
     }
 
-    @media (max-width: 768px) {
+    .tariff-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease;
+    text-align: left;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 0 4px;
+}
+.tariff-detail.open {
+    max-height: 300px;
+    padding: 12px 4px;
+    margin-top: 8px;
+}
+.tariff-detail p {
+    margin-bottom: 10px;
+}
+.tariff-card-land {
+    padding-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 200px;
+}
+.tariff-connect {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    width: 100%;
+}
+.tariff-more {
+    margin-top: auto;
+    position: relative;
+    bottom: 4px;
+}
+.tariff-byok-land { margin-bottom: 4px; }
+
+@media (max-width: 768px) {
         .tariff-grid { grid-template-columns: 1fr; max-width: 320px; }
         .hero { padding: 30px 8px 20px; }
         .audit-card { margin: 0 0 30px; }
@@ -180,14 +218,80 @@
         background-clip: text;
         margin-bottom: 8px;
     }
+.tariffs-landing {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    max-width: 1000px;
+    margin: 30px auto 50px;
+    padding: 0 12px;
+}
+.tariff-card-land {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15);
+    border-radius: 14px; padding: 24px 16px 44px; text-align: center;
+    transition: all 0.3s; position: relative; overflow: hidden;
+}
+.tariff-card-land::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #c084fc, #00ff88, transparent);
+    opacity: 0; transition: opacity 0.4s;
+}
+.tariff-card-land:hover::after { opacity: 1; }
+.tariff-card-land:hover { border-color: #c084fc40; box-shadow: 0 0 30px rgba(192,132,252,0.1); transform: translateY(-2px); }
+.tariff-icon-land { font-size: 2rem; margin-bottom: 8px; }
+.tariff-name-land { font-weight: 700; color: #e0e0e0; font-size: 0.9rem; }
+.tariff-price-land { font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; background: linear-gradient(135deg, #c084fc, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 8px 0; }
+.tariff-price-land span { font-size: 0.7rem; color: #6b7280; -webkit-text-fill-color: #6b7280; }
+.tariff-connect {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    width: 100%;
+}
+.tariff-more {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #c084fc, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    border-bottom: 1px dashed rgba(192,132,252,0.4);
+    padding-bottom: 1px;
+    transition: all 0.3s;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+.tariff-more:hover {
+    border-bottom-color: #c084fc;
+    text-shadow: 0 0 10px rgba(192,132,252,0.4);
+}
+.tariff-desc-land { color: #6b7280; font-size: 0.78rem; margin-bottom: 6px; }
+.tariff-byok-land {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    padding: 3px 14px; border-radius: 20px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    background: rgba(192,132,252,0.1); color: #c084fc; border: 1px solid rgba(192,132,252,0.2);
+}
+.tariff-card-land .btn { margin-top: 8px; font-size: 0.8rem; }
+@media (max-width: 768px) {
+    .tariffs-landing { grid-template-columns: 1fr; max-width: 340px; margin: 30px auto 50px; }
+}
 </style>
 
 <div class="hero">
     <h1><span class="neon-text">Алиса</span> видит<br>твой бизнес?</h1>
     <p class="subtitle">Нейро-карточка в 3 клика. Без правок на сайте.</p>
     <div class="flex flex-center flex-wrap" style="gap:8px;">
+        {% if session.get('user_id') %}
+        <a href="/dashboard" class="btn btn-primary">Личный кабинет</a>
+        <a href="/logout" class="btn btn-ghost">Выход</a>
+        {% else %}
         <a href="/register" class="btn btn-primary">Активировать</a>
         <a href="/login" class="btn btn-ghost">Вход</a>
+        {% endif %}
     </div>
 </div>
 
@@ -267,7 +371,7 @@
         </div>
 
         <div class="text-center mt-2">
-            <a href="/register" class="btn btn-soft-glow">Подключить (990 ₽/мес)</a>
+
             <p class="text-muted text-sm mt-1">7 дней бесплатно</p>
         </div>
     </div>
@@ -347,27 +451,76 @@
             </div>
         </div>
 
-<div class="tariff-grid" style="margin-top: 30px;">
-    <div class="card tariff-card featured">
-        <div class="tariff-badge"><span class="badge badge-trial">Пробный</span></div>
-        <div class="tariff-name-grad">Пробный</div>
-        <div class="tariff-price" style="font-size:2.5rem;">0 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
-        <div class="tariff-features">FAQ онлайн на 7 дней</div>
-        <a href="/register" class="btn btn-cyber-pulse w-full cyber-gradient">Выбрать</a>
+<div class="tariffs-landing" id="tariffsLanding">
+    <!-- Lite -->
+    <div class="tariff-card-land">
+        <div class="tariff-icon-land">⚡</div>
+        <div class="tariff-name-land">Нейровизор Lite</div>
+        <div class="tariff-price-land">399₽<span>/мес</span></div>
+        <div class="tariff-desc-land">нейро-карточка + FAQ</div>
+        <div class="tariff-byok-land">BYOK</div>
+        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
+        <a href="/register?tariff=lite" class="btn btn-neon w-full tariff-connect">Подключить</a>
+        <div class="tariff-detail">
+            <p>Нейро-карточка с FAQ-разметкой Schema.org для вашего сайта. Алиса и Яндекс.Нейро начнут видеть ответы на вопросы клиентов. Вы получаете готовый код для вставки на сайт. Работает на ваших токенах (BYOK).</p>
+            
+        </div>
     </div>
-    <div class="card tariff-card">
-        <div class="tariff-badge">&nbsp;</div>
-        <div class="tariff-name-grad">Базовый</div>
-        <div class="tariff-price" style="font-size:2.5rem;">990 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
-        <div class="tariff-features">FAQ + Нейро-карточка<br>Чат на сайте</div>
-        <a href="/register" class="btn btn-neon-premium w-full cyber-gradient">Выбрать</a>
+    <!-- Базовый -->
+    <div class="tariff-card-land">
+        <div class="tariff-icon-land">🔮</div>
+        <div class="tariff-name-land">Нейровизор</div>
+        <div class="tariff-price-land">599₽<span>/мес</span></div>
+        <div class="tariff-desc-land">нейро-карточка + FAQ</div>
+        <div class="tariff-byok-land" style="visibility:hidden">-</div>
+        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
+        <a href="/register?tariff=basic" class="btn btn-neon w-full tariff-connect">Подключить</a>
+        <div class="tariff-detail">
+            <p>Всё из Lite, но на наших токенах. Не нужно настраивать BYOK — просто добавьте сайт и получите готовую нейро-карточку. Идеально для быстрого старта.</p>
+            
+        </div>
     </div>
-    <div class="card tariff-card">
-        <div class="tariff-badge">&nbsp;</div>
-        <div class="tariff-name-grad">Профессиональный</div>
-        <div class="tariff-price" style="font-size:2.5rem;">1990 ₽<small style="font-size:0.9rem; color:var(--text-bright);">/мес</small></div>
-        <div class="tariff-features">Всё + VK Mini App<br>UGC-размещение</div>
-        <a href="/register" class="btn btn-primary w-full cyber-gradient">Выбрать</a>
+    <!-- 2.0 -->
+    <div class="tariff-card-land">
+        <div class="tariff-icon-land">🤖</div>
+        <div class="tariff-name-land">Нейровизор 2.0</div>
+        <div class="tariff-price-land">799₽<span>/мес</span></div>
+        <div class="tariff-desc-land">+ чат-бот на сайте</div>
+        <div class="tariff-byok-land">BYOK</div>
+        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
+        <a href="/register?tariff=pro2" class="btn btn-neon w-full tariff-connect">Подключить</a>
+        <div class="tariff-detail">
+            <p>Нейро-карточка + FAQ + ИИ-чат-бот, обученный на контенте вашего сайта. Бот отвечает клиентам 24/7, используя информацию с сайта. Работает на ваших токенах (BYOK).</p>
+            
+        </div>
+    </div>
+    <!-- PRO -->
+    <div class="tariff-card-land">
+        <div class="tariff-icon-land">👑</div>
+        <div class="tariff-name-land">Нейровизор PRO</div>
+        <div class="tariff-price-land">999₽<span>/мес</span></div>
+        <div class="tariff-desc-land">+ чат-бот на сайте</div>
+        <div class="tariff-byok-land" style="visibility:hidden">-</div>
+        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
+        <a href="/register?tariff=pro" class="btn btn-neon w-full tariff-connect">Подключить</a>
+        <div class="tariff-detail">
+            <p>Нейро-карточка + FAQ + чат-бот на наших токенах. Максимальная производительность без настройки BYOK. Бот обучается на всех страницах сайта и отвечает клиентам мгновенно.</p>
+            
+        </div>
+    </div>
+    <!-- BUSINESS -->
+    <div class="tariff-card-land">
+        <div class="tariff-icon-land">🚀</div>
+        <div class="tariff-name-land">Нейровизор BUSINESS</div>
+        <div class="tariff-price-land">1 599₽<span>/мес</span></div>
+        <div class="tariff-desc-land">+ VK Mini App + UGC</div>
+        <div class="tariff-byok-land" style="visibility:hidden">-</div>
+        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
+        <a href="/register?tariff=business" class="btn btn-neon w-full tariff-connect">Подключить</a>
+        <div class="tariff-detail">
+            <p>Полный пакет: нейро-карточка + FAQ + чат-бот + VK Mini App с автозапуском + UGC-генератор (30 запросов/мес). Всё на наших токенах. Для бизнеса, который хочет быть везде.</p>
+            
+        </div>
     </div>
 </div>
 
