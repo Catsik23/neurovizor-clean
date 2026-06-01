@@ -8,7 +8,7 @@
         <span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span>
     </a>
     <div class="nav-links">
-        <a href="/" class="nav-link btn-home" title="На главную">⌂</a>
+        <a href="/" class="nav-link btn-home" title="На главную">🏠</a>
         <a href="/dashboard/sites/new" class="nav-link btn-add-site" title="Добавить сайт">+</a>
         <a href="/dashboard/settings" class="nav-link">Настройки</a>
         <a href="/logout" class="nav-link btn-logout">Выход</a>
@@ -99,6 +99,9 @@ fetch('/dashboard/api/analytics')
   .then(r => r.json())
   .then(data => {
     const ctx = document.getElementById('viewsChart').getContext('2d');
+    if (!data.values || data.values.every(v => v === 0)) {
+      document.querySelector('.chart-title').textContent = 'Просмотры за 7 дней — пока нет данных';
+    }
     new Chart(ctx, {
       type: 'line',
       data: {
@@ -117,6 +120,7 @@ fetch('/dashboard/api/analytics')
         }]
       },
       options: {
+        animation: false,
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {

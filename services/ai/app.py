@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import requests, re, os, sys, json
 
-from shared.supabase import supabase
+from shared.supabase import get_supabase
 from shared.logger import log_event
 
 ai_bp = Blueprint('ai', __name__)

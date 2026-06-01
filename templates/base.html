@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI Visibility Optimizer{% endblock %}</title>
+    <title>{% block title %}Нейровизор{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -387,8 +387,7 @@
 <body>
     <!-- Matrix Rain -->
     <canvas id="matrixRain" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.5;"></canvas>
-    <!-- Radar Blip -->
-    <canvas id="radarBlip" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.4;"></canvas>
+    
     <script>
     (function() {
         const canvas = document.getElementById('matrixRain');
@@ -417,7 +416,7 @@
                 for (let i=0;i<drop.chars.length;i++) {
                     const charY = drop.y - i*(fontSize+2);
                     const alpha = drop.opacity * (1 - i/drop.chars.length);
-                    ctx.fillStyle = drop.color+alpha+')';
+                    ctx.fillStyle = `${drop.color}${alpha})`;
                     ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
                     ctx.fillText(drop.chars[i], drop.x, charY);
                 }
@@ -425,36 +424,6 @@
             requestAnimationFrame(draw);
         }
         draw();
-    })();
-    </script>
-    <script>
-    (function() {
-        const canvas = document.getElementById('radarBlip');
-        const ctx = canvas.getContext('2d');
-        let width, height, blips = [], maxBlips = 2;
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-        resize(); window.addEventListener('resize', resize);
-        function createBlip() { return { x: Math.random()*width*0.6+width*0.2, y: Math.random()*height*0.5+height*0.1, radius: 0, maxRadius: 30+Math.random()*40, opacity: 0.7+Math.random()*0.3, speed: 0.8+Math.random()*1.2, delay: Math.random()*5000, lastTime: performance.now() }; }
-        for (let i=0;i<maxBlips;i++) blips.push(createBlip());
-        function draw(timestamp) {
-            ctx.clearRect(0,0,width,height);
-            blips.forEach(blip => {
-                const elapsed = timestamp - blip.lastTime;
-                if (elapsed < blip.delay) return;
-                const activeTime = elapsed - blip.delay;
-                blip.radius = (activeTime*blip.speed*0.05) % blip.maxRadius;
-                const progress = blip.radius/blip.maxRadius;
-                const alpha = blip.opacity*(1-progress);
-                if (progress > 0.95) { blip.x = Math.random()*width*0.6+width*0.2; blip.y = Math.random()*height*0.5+height*0.1; blip.maxRadius = 30+Math.random()*40; blip.speed = 0.8+Math.random()*1.2; blip.delay = Math.random()*4000+1000; blip.lastTime = timestamp; blip.radius = 0; return; }
-                const startAngle = -0.3+progress*0.6, endAngle = startAngle+1.2;
-                const gradient = ctx.createRadialGradient(blip.x,blip.y,blip.radius*0.5,blip.x,blip.y,blip.radius);
-                gradient.addColorStop(0,`rgba(192,132,252,${alpha})`); gradient.addColorStop(1,'rgba(192,132,252,0)');
-                ctx.beginPath(); ctx.arc(blip.x,blip.y,blip.radius,startAngle,endAngle); ctx.strokeStyle = gradient; ctx.lineWidth = 2; ctx.stroke();
-                ctx.beginPath(); ctx.arc(blip.x,blip.y,2,0,Math.PI*2); ctx.fillStyle = `rgba(192,132,252,${alpha*1.5})`; ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        }
-        requestAnimationFrame(draw);
     })();
     </script>
 
@@ -469,20 +438,19 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-
         {% block content %}{% endblock %}
     </div>
 
-<script>
-// Авто-скрытие уведомлений через 5 секунд
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.notify-bar').forEach(function(bar) {
-        setTimeout(function() {
-            bar.style.animation = 'notifyOut 0.4s ease-in forwards';
-            setTimeout(function() { bar.remove(); }, 400);
-        }, 5000);
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.notify-bar').forEach(function(bar) {
+            setTimeout(function() {
+                bar.style.animation = 'notifyOut 0.4s ease-in forwards';
+                setTimeout(function() { bar.remove(); }, 400);
+            }, 8000);
+        });
     });
-});
-</script>
+    </script>
+
 </body>
 </html>

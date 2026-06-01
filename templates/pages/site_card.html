@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}{{ site.domain }} — AI Visibility Optimizer{% endblock %}
+{% block title %}{{ site.domain }} — Нейровизор{% endblock %}
 {% block content %}
 <div class="nav">
-    <a href="/dashboard" class="nav-brand"><span>AI</span> Visibility</a>
+    <a href="/dashboard" class="nav-brand"><span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span></a>
     <div class="nav-links">
         <a href="/dashboard" class="nav-link">Дашборд</a>
         <a href="/dashboard/sites/new" class="nav-link">+ Добавить сайт</a>
@@ -130,8 +130,8 @@
 
         <div class="card mb-1">
             <h2 style="font-size:1rem; margin-bottom:8px;">Виджет</h2>
-            <code style="display:block;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;font-size:0.7rem;color:var(--neon);">&lt;script src="https://ai-site-bot.onrender.com/widget.js?id={{ site.id }}"&gt;&lt;/script&gt;</code>
-            <button class="btn btn-ghost text-sm mt-1 w-full" data-script="<script src='https://ai-site-bot.onrender.com/widget.js?id={{ site.id | e }}'></script>" onclick="navigator.clipboard.writeText(this.dataset.script)">Скопировать</button>
+            <code style="display:block;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;font-size:0.7rem;color:var(--neon);">&lt;script src="https://нейровизор.рф/widget.js?id={{ site.id }}"&gt;&lt;/script&gt;</code>
+            <button class="btn btn-ghost text-sm mt-1 w-full" data-script="<script src='https://нейровизор.рф/widget.js?id={{ site.id | e }}'></script>" onclick="navigator.clipboard.writeText(this.dataset.script)">Скопировать</button>
         </div>
     </div>
 

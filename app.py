@@ -89,10 +89,13 @@ def demo():
         
         # Шаг 2: Сохраняем все чанки через прямые HTTP-запросы
         import requests as req
-        supabase_url = os.environ['SUPABASE_URL'] + '/rest/v1/knowledge_chunks'
+        supabase_url = os.environ.get('SUPABASE_URL', '') + '/rest/v1/knowledge_chunks'
+        supabase_key = os.environ.get('SUPABASE_KEY', '')
+        if not supabase_url.startswith('http') or not supabase_key:
+            raise ValueError('SUPABASE_URL/KEY not configured')
         supabase_headers = {
-            'apikey': os.environ['SUPABASE_KEY'],
-            'Authorization': 'Bearer ' + os.environ['SUPABASE_KEY'],
+            'apikey': supabase_key,
+            'Authorization': 'Bearer ' + supabase_key,
             'Content-Type': 'application/json'
         }
         for item in chunk_data:
@@ -133,7 +136,7 @@ def admin_errors():
     from shared.supabase import get_supabase
     
     since = (dt.utcnow() - timedelta(hours=24)).isoformat()
-    events = supabase.table('events') \
+    events = get_supabase().table('events') \
         .select('*') \
         .gte('created_at', since) \
         .order('created_at', desc=True) \
@@ -209,7 +212,9 @@ def test_embed():
 def health():
     try:
         from shared.ai_client import get_model
+        from shared.supabase import get_supabase
         get_model()
+        get_supabase().table('users').select('id').limit(1).execute()
         return 'ready'
     except:
         return 'loading', 503

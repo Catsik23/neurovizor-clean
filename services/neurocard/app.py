@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, send_from_directory
 import re, sys, os, requests, html as html_module, json as json_module, time, time
 
-from shared.supabase import supabase
+from shared.supabase import get_supabase
 from shared.logger import log_event
 from shared.ai_client import ask_yandexgpt
 
@@ -66,7 +66,7 @@ def api_generate_card():
         return jsonify({'success': False, 'message': 'Нужны domain и title'})
     fn = generate_neuro_card_static(data['domain'], data['title'], data.get('text', ''), data.get('phones', []), data.get('emails', []), data.get('faq', []), data.get('site_id', ''))
     if data.get('site_id'):
-        supabase.table('sites').update({'neuro_card_url': f'/neuro/{fn}', 'neuro_card_active': True}).eq('id', data['site_id']).execute()
+        get_supabase().table('sites').update({'neuro_card_url': f'/neuro/{fn}', 'neuro_card_active': True}).eq('id', data['site_id']).execute()
     return jsonify({'success': True, 'url': f'/neuro/{fn}'})
 
 
@@ -94,7 +94,7 @@ def bot_chat():
                 if cached and time.time() - cached.get('ts', 0) < 300:
                     site_data = cached['data']
                 else:
-                    site = supabase.table('sites').select('id,site_type').eq('domain', domain).execute()
+                    site = get_supabase().table('sites').select('id,site_type').eq('domain', domain).execute()
                     site_data = site.data
                     _cache[cache_key] = {'data': site_data, 'ts': time.time()}
                 if site_data:
@@ -103,11 +103,18 @@ def bot_chat():
             
             # Если site_id есть — используем векторный поиск
             if site_id:
+                # Получаем site_type из БД для правильного промпта
+                try:
+                    site_info = get_supabase().table('sites').select('site_type').eq('id', site_id).execute()
+                    if site_info.data:
+                        site_type = site_info.data[0].get('site_type', 'general')
+                except:
+                    pass
                 from shared.ai_client import get_relevant_chunks
                 context = get_relevant_chunks(site_id, question)
                 if not context:
                     # Fallback: простой поиск по чанкам
-                    chunks = supabase.table('knowledge_chunks') \
+                    chunks = get_supabase().table('knowledge_chunks') \
                         .select('chunk_text') \
                         .eq('site_id', site_id) \
                         .limit(5).execute()
