@@ -16,22 +16,85 @@
     <p class="text-muted text-sm">{{ site.site_type or 'general' }}</p>
 </div>
 
-<!-- Панель "полицейская мигалка" -->
+<!-- Нейро-панель с тарифом -->
+{% set site_tariff = site.tariff or 'trial' %}
 {% if site.neuro_card_url and site.neuro_card_active %}
 <a href="{{ site.neuro_card_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
     <div class="neuro-panel active">
         <div class="neuro-btn">НЕЙРО-КАРТОЧКА</div>
-        <div class="neuro-status on">● АКТИВНА</div>
+        <div class="neuro-status on">
+            <span class="tariff-label">Ваш тариф</span>
+            <span class="tariff-name-gem">
+                {% if site_tariff == 'lite' %}⚡ Lite
+                {% elif site_tariff == 'basic' %}🔮 Базовый
+                {% elif site_tariff == 'pro2' %}🤖 2.0
+                {% elif site_tariff == 'pro' %}👑 PRO
+                {% elif site_tariff == 'business' %}🚀 BUSINESS
+                {% else %}💎 Пробный{% endif %}
+            </span>
+        </div>
     </div>
 </a>
 {% else %}
 <div class="neuro-panel inactive">
     <div class="neuro-btn off">НЕЙРО-КАРТОЧКА</div>
-    <div class="neuro-status off">● НЕАКТИВНА</div>
+    <div class="neuro-status off">НЕ АКТИВНА</div>
 </div>
 {% endif %}
 
+
+
 <style>
+.tariff-badge-card {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15);
+    border-radius: 12px; padding: 20px; text-align: center;
+    margin-bottom: 12px; position: relative; overflow: hidden;
+}
+.tariff-badge-card.active {
+    border: 1px solid transparent;
+    border-image: linear-gradient(135deg, #c084fc, #00ff88, #c084fc) 1;
+    animation: gemGlow 3s ease-in-out infinite;
+}
+.tariff-gem {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 6px;
+}
+.gem-icon {
+    font-size: 1.5rem;
+    animation: gemSpin 4s linear infinite;
+    display: inline-block;
+}
+.gem-name {
+    font-weight: 700; font-size: 0.85rem;
+    background: linear-gradient(135deg, #c084fc, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.tariff-gem-price {
+    font-size: 1.3rem; font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #c084fc, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+}
+.tariff-gem-price span {
+    font-size: 0.65rem; color: #6b7280;
+    -webkit-text-fill-color: #6b7280;
+}
+.tariff-upgrade-btn {
+    font-size: 0.7rem; padding: 6px 12px;
+}
+@keyframes gemGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(192,132,252,0.3), 0 0 30px rgba(0,255,136,0.1); }
+    50% { box-shadow: 0 0 30px rgba(192,132,252,0.6), 0 0 60px rgba(0,255,136,0.3); }
+}
+@keyframes gemSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
     .neuro-panel {
         display: flex;
         border-radius: 8px;
@@ -75,8 +138,27 @@
         font-size: 0.75rem;
     }
     .neuro-status.on {
-        background: rgba(52,211,153,0.1);
-        color: #34d399;
+        background: rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+    }
+    .tariff-label {
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #6b7280;
+        font-weight: 400;
+    }
+    .tariff-name-gem {
+        font-size: 0.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #c084fc, #00ff88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
     }
     
     .faq-hidden { display: none; }

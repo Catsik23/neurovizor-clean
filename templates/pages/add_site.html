@@ -18,6 +18,105 @@
             <label class="form-label">URL сайта</label>
             <input type="text" name="url" class="form-input" placeholder="https://example.com" required>
         </div>
+        <div class="form-group">
+            <label class="form-label">Тариф</label>
+            <div class="tariff-radio-group">
+                <label class="tariff-radio {% if request.args.get('tariff', 'trial') == 'trial' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="trial" {% if request.args.get('tariff', 'trial') == 'trial' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">💎</span>
+                    <span class="tariff-radio-name">Пробный</span>
+                    <span class="tariff-radio-price">7 дней</span>
+                </label>
+                <label class="tariff-radio {% if request.args.get('tariff') == 'lite' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="lite" {% if request.args.get('tariff') == 'lite' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">⚡</span>
+                    <span class="tariff-radio-name">Lite</span>
+                    <span class="tariff-radio-price">399₽</span>
+                </label>
+                <label class="tariff-radio {% if request.args.get('tariff') == 'basic' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="basic" {% if request.args.get('tariff') == 'basic' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">🔮</span>
+                    <span class="tariff-radio-name">Базовый</span>
+                    <span class="tariff-radio-price">599₽</span>
+                </label>
+                <label class="tariff-radio {% if request.args.get('tariff') == 'pro2' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="pro2" {% if request.args.get('tariff') == 'pro2' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">🤖</span>
+                    <span class="tariff-radio-name">2.0</span>
+                    <span class="tariff-radio-price">799₽</span>
+                </label>
+                <label class="tariff-radio {% if request.args.get('tariff') == 'pro' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="pro" {% if request.args.get('tariff') == 'pro' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">👑</span>
+                    <span class="tariff-radio-name">PRO</span>
+                    <span class="tariff-radio-price">999₽</span>
+                </label>
+                <label class="tariff-radio {% if request.args.get('tariff') == 'business' %}selected{% endif %}">
+                    <input type="radio" name="tariff" value="business" {% if request.args.get('tariff') == 'business' %}checked{% endif %}>
+                    <span class="tariff-radio-icon">🚀</span>
+                    <span class="tariff-radio-name">BUSINESS</span>
+                    <span class="tariff-radio-price">1 599₽</span>
+                </label>
+            </div>
+        </div>
+        
+<style>
+.tariff-radio-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+}
+.tariff-radio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
+    border: 1px solid rgba(120,100,255,0.15);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+.tariff-radio:hover {
+    border-color: #c084fc60;
+    box-shadow: 0 0 15px rgba(192,132,252,0.1);
+}
+.tariff-radio.selected {
+    border-color: #c084fc;
+    box-shadow: 0 0 20px rgba(192,132,252,0.2);
+    background: linear-gradient(135deg, #0d0d2b, #1a1030);
+}
+.tariff-radio input[type="radio"] {
+    display: none;
+}
+.tariff-radio-icon {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
+.tariff-radio-name {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #e0e0e0;
+}
+.tariff-radio-price {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #c084fc, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: 2px;
+}
+</style>
+<script>
+document.querySelectorAll('.tariff-radio input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.tariff-radio').forEach(function(l) { l.classList.remove('selected'); });
+        this.closest('.tariff-radio').classList.add('selected');
+    });
+});
+</script>
+
         <button type="submit" class="btn btn-primary w-full">Анализировать и создать</button>
     </form>
 </div>

@@ -669,11 +669,4 @@
         }
     }
 </script>
-<script>
-function toggleTariff(el) {
-    var card = el.closest('.tariff-card-land');
-    var detail = card.querySelector('.tariff-detail');
-    detail.classList.toggle('open');
-}
-</script>
 {% endblock %}

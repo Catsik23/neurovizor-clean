@@ -52,6 +52,9 @@ def register():
             'subscription_active': False
         }).execute()
 
+        # Сохраняем выбранный тариф
+        selected_tariff = request.args.get('tariff', 'trial')
+        session['selected_tariff'] = selected_tariff
         log_event('user_registered')
         flash('Регистрация успешна!', 'success')
         return redirect(url_for('auth.login'))
@@ -138,7 +141,8 @@ def add_site():
             'site_type': detect_site_type(result['text']),
             'contacts': '{"phones": [], "emails": []}',
             'neuro_card_url': '',
-            'neuro_card_active': False
+            'neuro_card_active': False,
+            'tariff': request.form.get('tariff', 'trial')
         }).execute()
         
         site_id = site_result.data[0]['id']

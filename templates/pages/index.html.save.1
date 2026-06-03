@@ -4,6 +4,8 @@
 <style>
     .hero { text-align: center; padding: 50px 16px 30px; }
     .hero h1 { line-height: 1.15; }
+
+
     .hero .neon-text { color: var(--neon); text-shadow: 0 0 20px rgba(192,132,252,0.5); }
     .hero .subtitle {
         color: var(--text-muted);
@@ -668,12 +670,5 @@
             document.getElementById('showMoreFaq').innerHTML = 'Показать ещё <span id="faqRemaining">' + (allFaq.length - 3) + '</span> вопросов';
         }
     }
-</script>
-<script>
-function toggleTariff(el) {
-    var card = el.closest('.tariff-card-land');
-    var detail = card.querySelector('.tariff-detail');
-    detail.classList.toggle('open');
-}
 </script>
 {% endblock %}
