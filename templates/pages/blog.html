@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Блог — Нейровизор{% endblock %}
+{% block description %}Статьи о нейропоиске, AEO-оптимизации и видимости в ИИ-ассистентах.{% endblock %}
+{% block content %}
+<style>
+    .blog-hero { padding: 60px 20px 40px; text-align: center; }
+    .blog-hero h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
+    .blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; padding: 0 20px 60px; }
+    .blog-card { padding: 0; overflow: hidden; }
+    .blog-card-body { padding: 20px; }
+    .blog-card-date { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .blog-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+    .blog-card p { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; margin-bottom: 12px; }
+    .blog-tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(192,132,252,0.1); color: var(--neon-purple); border: 1px solid rgba(192,132,252,0.2); }
+</style>
+
+<section class="blog-hero">
+    <h1 class="gradient-text mb-2">Блог</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Всё о нейропоиске, AEO и видимости в ИИ-ассистентах</p>
+</section>
+
+<section>
+    <div class="blog-grid">
+        <a href="/blog/aeo-guide" style="text-decoration:none;">
+            <div class="card blog-card">
+                <div class="blog-card-body">
+                    <div class="blog-card-date">Май 2026</div>
+                    <h3>Что такое AEO и почему ваш бизнес теряет 50% клиентов</h3>
+                    <p>Answer Engine Optimization — новый стандарт поиска. Как нейросети выбирают сайты для ответа и как стать источником.</p>
+                    <span class="blog-tag">AEO</span>
+                </div>
+            </div>
+        </a>
+        <a href="/blog/alice-business" style="text-decoration:none;">
+            <div class="card blog-card">
+                <div class="blog-card-body">
+                    <div class="blog-card-date">Апрель 2026</div>
+                    <h3>Как Алиса выбирает, кого рекомендовать: исследование</h3>
+                    <p>Разбираем алгоритм: структурированные данные, частотность упоминаний, авторитетность источника. Как попасть в топ.</p>
+                    <span class="blog-tag">Алиса</span>
+                </div>
+            </div>
+        </a>
+        <a href="/blog/schema-org-seo" style="text-decoration:none;">
+            <div class="card blog-card">
+                <div class="blog-card-body">
+                    <div class="blog-card-date">Март 2026</div>
+                    <h3>Schema.org: почему без разметки ваш сайт — просто текст для ИИ</h3>
+                    <p>Как работает семантическая разметка, какие схемы важны для нейропоиска и как внедрить за 5 минут.</p>
+                    <span class="blog-tag">Schema.org</span>
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+{% endblock %}

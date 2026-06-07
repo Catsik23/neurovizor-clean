@@ -118,6 +118,22 @@ def demo():
         print('>>> DEMO CHUNK ERROR:', str(e), flush=True)
         log_event('demo_chunk_error', error=str(e), site_id=demo_site_id)
 
+    print('>>> COLLECTING NICHE QUERIES...', flush=True)
+    # Собираем поисковые запросы по нише
+    niche_queries = []
+    try:
+        from shared.suggest_collector import collect_niche_queries
+        niche_queries = collect_niche_queries(result.get('domain', ''), result.get('text', ''))
+        for q in niche_queries:
+            get_supabase().table('analytics').insert({
+                'site_id': demo_site_id,
+                'page': '/demo',
+                'event_type': 'search_query',
+                'ip': q[:80]
+            }).execute()
+    except Exception as e:
+        log_event('niche_queries_error', error=str(e))
+
     # Считаем количество найденных страниц
     pages_found = len(result.get('pages', []))
 
@@ -230,3 +246,20 @@ print(f">>> Model ready in {_time.time()-_t0:.1f}s", flush=True)
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
+# Дополнительные страницы
+@app.route('/about')
+def about():
+    return render_template('pages/about.html')
+
+@app.route('/blog')
+def blog():
+    return render_template('pages/blog.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('pages/terms.html')
+
+@app.route('/public-offer')
+def public_offer():
+    return render_template('pages/public_offer.html')

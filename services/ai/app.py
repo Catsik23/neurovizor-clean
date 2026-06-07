@@ -27,14 +27,14 @@ def generate_faq(title, text, phones, emails):
 
     try:
         resp = requests.post(
-            "https://llm.api.cloud.yandex.net/foundationModels/v1/completion",
+            "https://llm.api.cloud.yandex.net/v2/chat/completions",
             headers={"Authorization": f"Api-Key {YANDEX_API_KEY}", "x-folder-id": YANDEX_FOLDER_ID},
             json={
                 "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-lite",
                 "completionOptions": {"maxTokens": 1500, "temperature": 0.2},
                 "messages": [
-                    {"role": "system", "text": "Ты генератор FAQ. Возвращай ТОЛЬКО JSON-массив."},
-                    {"role": "user", "text": prompt}
+                    {"role": "system", "content": "Ты генератор FAQ. Возвращай ТОЛЬКО JSON-массив."},
+                    {"role": "user", "content": prompt}
                 ]
             },
             timeout=30
@@ -44,7 +44,7 @@ def generate_faq(title, text, phones, emails):
             return _fallback_faq(title, phones, emails)
         data = resp.json()
         if "result" in data:
-            full_text = data["result"]["alternatives"][0]["message"]["text"]
+            full_text = data["result"]["alternatives"][0]["message"]["content"]
             return _parse_faq_json(full_text, title, phones, emails)
     except requests.Timeout:
         log_event("FAQ_TIMEOUT", data={"error": "YandexGPT timeout"})

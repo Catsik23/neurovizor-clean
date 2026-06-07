@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 import bcrypt
 import json as json_module
 from datetime import datetime, timedelta
@@ -279,6 +279,22 @@ def api_analytics():
         values.append(by_day.get(day, 0))
     
     return jsonify({'labels': labels, 'values': values})
+
+@auth_bp.route('/dashboard/api/queries')
+@login_required
+def api_queries():
+    """API: поисковые запросы."""
+    supabase = get_supabase()
+    user_sites = supabase.table('sites').select('id').eq('user_id', session['user_id']).execute()
+    site_ids = [s['id'] for s in (user_sites.data or [])]
+    
+    if not site_ids:
+        return jsonify({'queries': []})
+    
+    events = supabase.table('analytics').select('ip').in_('site_id', site_ids).eq('event_type', 'search_query').order('created_at', desc=True).limit(10).execute()
+    
+    queries = [e['ip'] for e in (events.data or []) if e.get('ip')]
+    return jsonify({'queries': queries})
 
 @auth_bp.route('/dashboard/settings', methods=['GET', 'POST'])
 @login_required

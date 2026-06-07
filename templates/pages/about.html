@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}О сервисе — Нейровизор{% endblock %}
+{% block description %}Узнайте больше о платформе Нейровизор. Миссия, команда, ценности.{% endblock %}
+{% block content %}
+<style>
+    .about-hero { padding: 60px 20px 40px; text-align: center; }
+    .about-hero h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    .about-card { padding: 28px; text-align: center; }
+    .about-icon { font-size: 2.4rem; margin-bottom: 12px; }
+    .about-card h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.3px; }
+    .about-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+    .about-cta { text-align: center; padding: 60px 20px; }
+
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+</style>
+
+<section class="about-hero">
+    <h1 class="gradient-text mb-3">О сервисе</h1>
+    <p style="max-width:600px;margin:0 auto;color:var(--text-muted);font-size:0.95rem;line-height:1.6;">
+        Нейровизор — первая в России платформа для AEO-оптимизации.
+        Мы делаем бизнес видимым для нейропоиска: Алисы, Яндекс.Нейро и голосовых ассистентов.
+    </p>
+</section>
+
+<section>
+    <div class="about-grid">
+        <div class="card about-card">
+            <div class="about-icon">🎯</div>
+            <h3>Миссия</h3>
+            <p>Сделать каждый сайт источником ответов для ИИ-поиска. Без программистов, без правок на сайте, за 3 клика.</p>
+        </div>
+        <div class="card about-card">
+            <div class="about-icon">⚡</div>
+            <h3>Технология</h3>
+            <p>Собственные эмбеддинг-модели, pgvector для семантического поиска, YandexGPT для генерации FAQ. 384-мерные векторы — точность выше аналогов.</p>
+        </div>
+        <div class="card about-card">
+            <div class="about-icon">🛡️</div>
+            <h3>Безопасность</h3>
+            <p>Данные хранятся на российских серверах. SSL-шифрование. Никаких правок на вашем сайте — одна строка кода для виджета.</p>
+        </div>
+        <div class="card about-card">
+            <div class="about-icon">📈</div>
+            <h3>Результаты</h3>
+            <p>В среднем +30-50% трафика из нейропоиска в первый месяц. Ваш сайт цитируют Алиса и Яндекс.Нейро.</p>
+        </div>
+    </div>
+</section>
+
+<section class="about-cta">
+    <h2 class="h2 mb-2">Присоединяйтесь к <span class="gradient-text">нейро-революции</span></h2>
+    <a href="/register" class="btn btn-gold btn-lg mt-2">Начать — 7 дней бесплатно</a>
+</section>
+{% endblock %}

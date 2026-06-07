@@ -1,123 +1,83 @@
 {% extends "base.html" %}
 {% block title %}Добавить сайт — Нейровизор{% endblock %}
 {% block content %}
-<div class="nav">
-    <a href="/dashboard" class="nav-brand"><span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span></a>
-    <div class="nav-links">
-        <a href="/dashboard" class="nav-link">Дашборд</a>
-        <a href="/dashboard/sites/new" class="nav-link active">+ Добавить сайт</a>
-        <a href="/logout" class="nav-link btn-danger">Выйти</a>
+<style>
+    .add-container { max-width: 560px; margin: 40px auto; padding: 0 20px; }
+    .add-card { padding: 32px; }
+    .add-card h1 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .tariff-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .tariff-opt { padding: 14px 10px; text-align: center; cursor: pointer; transition: var(--transition-fast); }
+    .tariff-opt input { display: none; }
+    .tariff-opt.selected { border-color: var(--border-neon); box-shadow: var(--shadow-neon); }
+    .tariff-opt-icon { font-size: 1.4rem; margin-bottom: 4px; }
+    .tariff-opt-name { font-weight: 700; font-size: 0.8rem; }
+    .tariff-opt-price { font-family: var(--font-mono); font-size: 0.72rem; color: var(--neon-cyan); margin-top: 2px; }
+</style>
+
+<div class="add-container">
+    <div class="card add-card">
+        <h1 class="gradient-text">Добавить сайт</h1>
+        <p class="text-muted text-sm mb-3">Введите URL — мы проанализируем и создадим нейро-карточку</p>
+
+        <form method="POST" onsubmit="var b=this.querySelector('button[type=submit]');b.disabled=true;b.textContent='Анализ...';">
+            <div class="form-group">
+                <label class="form-label" for="url">URL сайта</label>
+                <input type="text" name="url" id="url" class="form-input" placeholder="https://example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Тариф</label>
+                <div class="tariff-select" id="tariffSelect">
+                    <label class="card tariff-opt {% if request.args.get('tariff', 'trial') == 'trial' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="trial" {% if request.args.get('tariff', 'trial') == 'trial' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">💎</div>
+                        <div class="tariff-opt-name">Пробный</div>
+                        <div class="tariff-opt-price">7 дней</div>
+                    </label>
+                    <label class="card tariff-opt {% if request.args.get('tariff') == 'lite' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="lite" {% if request.args.get('tariff') == 'lite' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">⚡</div>
+                        <div class="tariff-opt-name">Lite</div>
+                        <div class="tariff-opt-price">399₽/мес</div>
+                    </label>
+                    <label class="card tariff-opt {% if request.args.get('tariff') == 'basic' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="basic" {% if request.args.get('tariff') == 'basic' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">🔮</div>
+                        <div class="tariff-opt-name">Базовый</div>
+                        <div class="tariff-opt-price">599₽/мес</div>
+                    </label>
+                    <label class="card tariff-opt {% if request.args.get('tariff') == 'pro2' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="pro2" {% if request.args.get('tariff') == 'pro2' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">🤖</div>
+                        <div class="tariff-opt-name">2.0</div>
+                        <div class="tariff-opt-price">799₽/мес</div>
+                    </label>
+                    <label class="card tariff-opt {% if request.args.get('tariff') == 'pro' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="pro" {% if request.args.get('tariff') == 'pro' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">👑</div>
+                        <div class="tariff-opt-name">PRO</div>
+                        <div class="tariff-opt-price">999₽/мес</div>
+                    </label>
+                    <label class="card tariff-opt {% if request.args.get('tariff') == 'business' %}selected{% endif %}">
+                        <input type="radio" name="tariff" value="business" {% if request.args.get('tariff') == 'business' %}checked{% endif %}>
+                        <div class="tariff-opt-icon">🚀</div>
+                        <div class="tariff-opt-name">BUSINESS</div>
+                        <div class="tariff-opt-price">1 599₽/мес</div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold btn-lg w-full">Анализировать и создать</button>
+        </form>
     </div>
 </div>
 
-<div class="card" style="max-width:500px;margin:40px auto;">
-    <h2>Добавить сайт</h2>
-    <p class="text-muted text-sm mb-2">Введите URL — мы проанализируем сайт и создадим нейро-карточку</p>
-    <form method="POST">
-        <div class="form-group">
-            <label class="form-label">URL сайта</label>
-            <input type="text" name="url" class="form-input" placeholder="https://example.com" required>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Тариф</label>
-            <div class="tariff-radio-group">
-                <label class="tariff-radio {% if request.args.get('tariff', 'trial') == 'trial' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="trial" {% if request.args.get('tariff', 'trial') == 'trial' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">💎</span>
-                    <span class="tariff-radio-name">Пробный</span>
-                    <span class="tariff-radio-price">7 дней</span>
-                </label>
-                <label class="tariff-radio {% if request.args.get('tariff') == 'lite' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="lite" {% if request.args.get('tariff') == 'lite' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">⚡</span>
-                    <span class="tariff-radio-name">Lite</span>
-                    <span class="tariff-radio-price">399₽</span>
-                </label>
-                <label class="tariff-radio {% if request.args.get('tariff') == 'basic' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="basic" {% if request.args.get('tariff') == 'basic' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">🔮</span>
-                    <span class="tariff-radio-name">Базовый</span>
-                    <span class="tariff-radio-price">599₽</span>
-                </label>
-                <label class="tariff-radio {% if request.args.get('tariff') == 'pro2' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="pro2" {% if request.args.get('tariff') == 'pro2' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">🤖</span>
-                    <span class="tariff-radio-name">2.0</span>
-                    <span class="tariff-radio-price">799₽</span>
-                </label>
-                <label class="tariff-radio {% if request.args.get('tariff') == 'pro' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="pro" {% if request.args.get('tariff') == 'pro' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">👑</span>
-                    <span class="tariff-radio-name">PRO</span>
-                    <span class="tariff-radio-price">999₽</span>
-                </label>
-                <label class="tariff-radio {% if request.args.get('tariff') == 'business' %}selected{% endif %}">
-                    <input type="radio" name="tariff" value="business" {% if request.args.get('tariff') == 'business' %}checked{% endif %}>
-                    <span class="tariff-radio-icon">🚀</span>
-                    <span class="tariff-radio-name">BUSINESS</span>
-                    <span class="tariff-radio-price">1 599₽</span>
-                </label>
-            </div>
-        </div>
-        
-<style>
-.tariff-radio-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-}
-.tariff-radio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 8px;
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: center;
-}
-.tariff-radio:hover {
-    border-color: #c084fc60;
-    box-shadow: 0 0 15px rgba(192,132,252,0.1);
-}
-.tariff-radio.selected {
-    border-color: #c084fc;
-    box-shadow: 0 0 20px rgba(192,132,252,0.2);
-    background: linear-gradient(135deg, #0d0d2b, #1a1030);
-}
-.tariff-radio input[type="radio"] {
-    display: none;
-}
-.tariff-radio-icon {
-    font-size: 1.3rem;
-    margin-bottom: 4px;
-}
-.tariff-radio-name {
-    font-weight: 700;
-    font-size: 0.75rem;
-    color: #e0e0e0;
-}
-.tariff-radio-price {
-    font-size: 0.7rem;
-    font-family: 'JetBrains Mono', monospace;
-    background: linear-gradient(135deg, #c084fc, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-top: 2px;
-}
-</style>
 <script>
-document.querySelectorAll('.tariff-radio input[type="radio"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        document.querySelectorAll('.tariff-radio').forEach(function(l) { l.classList.remove('selected'); });
-        this.closest('.tariff-radio').classList.add('selected');
+document.querySelectorAll('#tariffSelect input[type=radio]').forEach(function(r) {
+    r.addEventListener('change', function() {
+        document.querySelectorAll('#tariffSelect .tariff-opt').forEach(function(o) { o.classList.remove('selected'); });
+        this.closest('.tariff-opt').classList.add('selected');
     });
 });
 </script>
-
-        <button type="submit" class="btn btn-primary w-full">Анализировать и создать</button>
-    </form>
-</div>
 {% endblock %}

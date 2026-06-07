@@ -20,7 +20,7 @@ def ask_yandexgpt(question, context, system_prompt=None):
         return simple_search(question, context)
     try:
         response = requests.post(
-            "https://llm.api.cloud.yandex.net/foundationModels/v1/completion",
+            "https://llm.api.cloud.yandex.net/v2/chat/completions",
             headers={
                 "Authorization": f"Api-Key {YANDEX_API_KEY}",
                 "x-folder-id": YANDEX_FOLDER_ID
@@ -29,8 +29,8 @@ def ask_yandexgpt(question, context, system_prompt=None):
                 "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-lite",
                 "completionOptions": {"maxTokens": 400, "temperature": 0.3},
                 "messages": [
-                    {"role": "system", "text": system_prompt if system_prompt else "Ты — ИИ-ассистент Нейровизора, персональный помощник этого сайта. Отвечай только на заданный вопрос. Если спрашивают о товарах, моделях или ассортименте — перечисли их списком, каждый с новой строки, с маркером •. Если информации нет — предложи связаться с менеджером. Будь дружелюбной и полезной.\nИНФО:\n" + context[:4000]},
-                    {"role": "user", "text": question}
+                    {"role": "system", "content": system_prompt if system_prompt else "Ты — ИИ-ассистент Нейровизора, персональный помощник этого сайта. Отвечай только на заданный вопрос. Если спрашивают о товарах, моделях или ассортименте — перечисли их списком, каждый с новой строки, с маркером •. Если информации нет — предложи связаться с менеджером. Будь дружелюбной и полезной.\nИНФО:\n" + context[:4000]},
+                    {"role": "user", "content": question}
                 ]
             },
             timeout=10
@@ -40,7 +40,7 @@ def ask_yandexgpt(question, context, system_prompt=None):
             return simple_search(question, context)
         data = response.json()
         if "result" in data:
-            return data["result"]["alternatives"][0]["message"]["text"]
+            return data["result"]["alternatives"][0]["message"]["content"]
     except (requests.Timeout, requests.ConnectionError, ValueError, KeyError) as e:
         log_event("YANDEX_ERROR", data={"error": str(e)})
     return simple_search(question, context)

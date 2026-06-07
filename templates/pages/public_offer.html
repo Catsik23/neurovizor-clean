@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Публичная оферта — Нейровизор{% endblock %}
+{% block content %}
+<style>
+    .doc { max-width: 800px; margin: 60px auto; padding: 0 20px; }
+    .doc h1 { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 900; margin-bottom: 24px; }
+    .doc h2 { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--neon-purple); margin: 28px 0 12px; }
+    .doc p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.7; margin-bottom: 12px; }
+</style>
+<div class="doc">
+    <h1 class="gradient-text">Публичная оферта</h1>
+    <p>Настоящий документ является официальным предложением (офертой) ИП «Нейровизор» заключить договор на оказание услуг.</p>
+    <h2>1. Предмет оферты</h2>
+    <p>Исполнитель предоставляет Заказчику доступ к платформе «Нейровизор» — сервису для создания нейро-карточек, FAQ-разметки и AI-чат-ботов.</p>
+    <h2>2. Тарифы и оплата</h2>
+    <p>Актуальные тарифы опубликованы на странице нейровизор.рф/#pricing. Оплата производится ежемесячно. Первые 7 дней — пробный период (кроме тарифа BUSINESS).</p>
+    <h2>3. Права и обязанности</h2>
+    <p>Исполнитель обязуется поддерживать работоспособность сервиса. Заказчик обязуется не использовать сервис для противоправных целей.</p>
+    <h2>4. Отказ от услуг</h2>
+    <p>Заказчик вправе отказаться от услуг в любой момент. Предоплата за неиспользованный период не возвращается.</p>
+    <h2>5. Реквизиты</h2>
+    <p>ИП «Нейровизор»<br>Email: support@нейровизор.рф</p>
+</div>
+{% endblock %}

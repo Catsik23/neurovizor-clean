@@ -1,258 +1,217 @@
 {% extends "base.html" %}
-{% block title %}Нейровизор — Дашборд{% endblock %}
+{% block title %}Дашборд — Нейровизор{% endblock %}
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<div class="nav">
-    <a href="/dashboard" class="nav-brand">
-        <span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span>
-    </a>
-    <div class="nav-links">
-        <a href="/" class="nav-link btn-home" title="На главную">🏠</a>
-        <a href="/dashboard/sites/new" class="nav-link btn-add-site" title="Добавить сайт">+</a>
-        <a href="/dashboard/settings" class="nav-link">Настройки</a>
-        <a href="/logout" class="nav-link btn-logout">Выход</a>
+<style>
+    .dash-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+    .dash-greeting { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
+    .dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat-card { padding: 18px; text-align: center; }
+    .stat-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; }
+    .stat-lbl { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    .sites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .site-card-link { text-decoration: none; }
+    .site-card-item {
+        padding: 20px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 120px;
+        text-align: center;
+        position: relative;
+    }
+    .site-card-item::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: var(--gradient-hero);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .site-card-item:hover::after { opacity: 1; }
+    .site-domain { font-weight: 700; font-size: 0.95rem; word-break: break-all; }
+    .site-type { color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin: 6px 0; }
+    .site-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); }
+    .site-status-on { color: var(--success); }
+    .site-status-off { color: var(--text-dim); }
+    .add-card-item {
+        border: 1px dashed var(--border-glow) !important;
+        background: transparent !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 120px;
+    }
+    .add-card-item:hover { border-color: var(--neon-purple) !important; background: rgba(192,132,252,0.03) !important; }
+    .add-icon { font-size: 2.2rem; color: rgba(192,132,252,0.4); transition: all 0.3s ease; }
+    .add-card-item:hover .add-icon { color: var(--neon-purple); transform: scale(1.15); }
+    .add-label { color: var(--text-dim); font-size: 0.78rem; margin-top: 8px; }
+
+    .chart-card-item { padding: 24px; margin-bottom: 28px; }
+
+    .onboarding { display: none; padding: 20px; margin-bottom: 24px; border: 1px solid var(--border-neon); text-align: center; border-radius: var(--radius-lg); }
+    .onboarding.active { display: block; animation: fadeInUp 0.5s ease both; }
+    .onboarding h3 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 8px; }
+    .onboarding p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+    .onboarding-steps { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+    .onboard-step { text-align: center; width: 80px; }
+    .onboard-num { width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-hero); display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: var(--font-display); margin: 0 auto 8px; color: #fff; font-size: 1rem; }
+    .onboard-step p { font-size: 0.7rem; color: var(--text-muted); }
+
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.6; }
+
+    @media (max-width: 768px) {
+        .sites-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .dash-stats { grid-template-columns: 1fr 1fr; }
+        .dash-greeting { font-size: 1.3rem; }
+    }
+</style>
+
+<div class="container" style="padding-top:20px;">
+    <!-- Header -->
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-greeting">Дашборд</h1>
+            <p class="text-muted text-sm">{% if session.get('user_email') %}{{ session.get('user_email') }}{% endif %}</p>
+        </div>
+        <a href="/dashboard/sites/new" class="btn btn-gold">+ Добавить сайт</a>
     </div>
-</div>
 
+    <!-- Onboarding -->
+    {% if sites|length == 0 %}
+    <div class="card onboarding active" id="onboarding">
+        <h3>🚀 Добро пожаловать в Нейровизор</h3>
+        <p>Сделайте ваш сайт видимым для Алисы за 3 шага</p>
+        <div class="onboarding-steps">
+            <div class="onboard-step"><div class="onboard-num">1</div><p>Добавьте сайт</p></div>
+            <div class="onboard-step"><div class="onboard-num">2</div><p>Получите нейро-карточку</p></div>
+            <div class="onboard-step"><div class="onboard-num">3</div><p>Вставьте 1 строку кода</p></div>
+        </div>
+        <a href="/dashboard/sites/new" class="btn btn-gold mt-3">Добавить первый сайт</a>
+    </div>
+    {% endif %}
 
+    <!-- Stats -->
+    <div class="dash-stats">
+        <div class="card stat-card">
+            <div class="stat-val gradient-text">{{ sites|length }}</div>
+            <div class="stat-lbl">Сайтов</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-val" style="color:var(--neon-green);">{{ active_sites|default(0) }}</div>
+            <div class="stat-lbl">Активных</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-val" style="color:var(--neon-cyan);">{{ total_faq|default(0) }}</div>
+            <div class="stat-lbl">FAQ</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-val" style="color:var(--gold-bright);">{{ total_views|default(0) }}</div>
+            <div class="stat-lbl">Просмотров</div>
+        </div>
+    </div>
 
-<!-- Сайты -->
-<h2 class="section-title">Мои сайты</h2>
-
-<div class="sites-grid">
+    <!-- Sites -->
+    <h2 class="h3 mb-2" style="color:var(--neon-purple);">Мои сайты</h2>
     {% if sites %}
+    <div class="sites-grid">
         {% for site in sites %}
         <a href="/dashboard/sites/{{ site.id }}" class="site-card-link">
-            <div class="site-card {% if site.neuro_card_active %}active{% else %}inactive{% endif %}">
+            <div class="card site-card-item" data-tooltip="{{ site.domain | replace('https://', '') | replace('http://', '') }}">
                 <div class="site-domain">{{ site.domain | replace('https://', '') | replace('http://', '') }}</div>
                 <div class="site-type">{{ site.site_type or 'general' }}</div>
                 <div class="site-meta">
                     <span>FAQ: {{ site.faq_count | default(0) }}</span>
-                    <span class="site-status {% if site.neuro_card_active %}on{% else %}off{% endif %}">
-                        {% if site.neuro_card_active %}● активна{% else %}○ ожидает{% endif %}
+                    <span class="{% if site.neuro_card_active %}site-status-on{% else %}site-status-off{% endif %}">
+                        {% if site.neuro_card_active %}● Активна{% else %}○ Ожидает{% endif %}
                     </span>
                 </div>
             </div>
         </a>
         {% endfor %}
+        <a href="/dashboard/sites/new" class="site-card-link">
+            <div class="card add-card-item">
+                <div class="add-icon">+</div>
+                <div class="add-label">Добавить сайт</div>
+            </div>
+        </a>
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <div class="empty-icon">📡</div>
+        <p class="text-muted">У вас пока нет сайтов</p>
+        <a href="/dashboard/sites/new" class="btn btn-primary mt-2">Добавить первый сайт</a>
+    </div>
     {% endif %}
-    
-    <!-- Кнопка Добавить сайт -->
-    <a href="/dashboard/sites/new" class="site-card-link add-new">
-        <div class="site-card add-card">
-            <div class="add-icon">+</div>
-            <div class="add-label">Добавить сайт</div>
-        </div>
-    </a>
-</div>
 
-<!-- График -->
-<div class="chart-card">
-    <h3 class="chart-title">Просмотры за 7 дней</h3>
-    <canvas id="viewsChart"></canvas>
-</div>
+    <!-- Chart -->
+    <div class="card chart-card-item">
+        <h3 class="mb-2" style="font-family:var(--font-mono);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--neon-cyan);">Просмотры за 7 дней</h3>
+        <canvas id="viewsChart" style="max-height:250px;width:100% !important;height:250px !important;"></canvas>
+    </div>
 
-<!-- Тарифная сетка -->
-<h2 class="section-title">Тарифы</h2>
-<div class="tariffs-grid">
-    <div class="tariff-card">
-        <div class="tariff-icon">⚡</div>
-        <div class="tariff-name">Нейровизор Lite</div>
-        <div class="tariff-price">399 ₽/мес</div>
-        <div class="tariff-desc">нейро-карточка + FAQ</div>
-        <div class="tariff-byok">BYOK</div>
-    </div>
-    <div class="tariff-card">
-        <div class="tariff-icon">🔮</div>
-        <div class="tariff-name">Нейровизор</div>
-        <div class="tariff-price">599 ₽/мес</div>
-        <div class="tariff-desc">нейро-карточка + FAQ</div>
-        <div class="tariff-byok" style="visibility:hidden">-</div>
-    </div>
-    <div class="tariff-card">
-        <div class="tariff-icon">🤖</div>
-        <div class="tariff-name">Нейровизор 2.0</div>
-        <div class="tariff-price">799 ₽/мес</div>
-        <div class="tariff-desc">+ чат-бот на сайте</div>
-        <div class="tariff-byok">BYOK</div>
-    </div>
-    <div class="tariff-card">
-        <div class="tariff-icon">👑</div>
-        <div class="tariff-name">Нейровизор PRO</div>
-        <div class="tariff-price">999 ₽/мес</div>
-        <div class="tariff-desc">+ чат-бот на сайте</div>
-        <div class="tariff-byok" style="visibility:hidden">-</div>
-    </div>
-    <div class="tariff-card">
-        <div class="tariff-icon">🚀</div>
-        <div class="tariff-name">Нейровизор BUSINESS</div>
-        <div class="tariff-price">1 599 ₽/мес</div>
-        <div class="tariff-desc">+ VK Mini App + UGC</div>
-        <div class="tariff-byok" style="visibility:hidden">-</div>
+    <!-- Quick links -->
+    <div class="flex flex-wrap" style="gap:12px;">
+        <a href="/dashboard/settings" class="btn btn-ghost btn-sm">⚙️ Настройки</a>
+        <a href="/about" class="btn btn-ghost btn-sm">ℹ️ О сервисе</a>
+        <a href="/blog" class="btn btn-ghost btn-sm">📚 Блог</a>
     </div>
 </div>
 
 <script>
-// График
+// Chart
 fetch('/dashboard/api/analytics')
   .then(r => r.json())
   .then(data => {
-    const ctx = document.getElementById('viewsChart').getContext('2d');
-    if (!data.values || data.values.every(v => v === 0)) {
-      document.querySelector('.chart-title').textContent = 'Просмотры за 7 дней — пока нет данных';
-    }
-    new Chart(ctx, {
+    var ctx = document.getElementById('viewsChart');
+    if (!ctx) return;
+    var labels = data.labels || [];
+    var values = data.values || [];
+    var allZero = values.every(function(v) { return v === 0; });
+    new Chart(ctx.getContext('2d'), {
       type: 'line',
       data: {
-        labels: data.labels,
+        labels: labels.length ? labels : ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
         datasets: [{
           label: 'Просмотры',
-          data: data.values,
-          borderColor: '#00ff88',
-          backgroundColor: 'rgba(0, 255, 136, 0.05)',
+          data: values.length ? values : [0,0,0,0,0,0,0],
+          borderColor: '#c084fc',
+          backgroundColor: 'rgba(192,132,252,0.05)',
           fill: true,
           tension: 0.4,
-          pointBackgroundColor: '#c084fc',
-          pointBorderColor: '#00ff88',
-          pointRadius: 3,
+          pointBackgroundColor: '#22d3ee',
+          pointBorderColor: '#c084fc',
+          pointRadius: 4,
+          pointHoverRadius: 6,
           borderWidth: 2
         }]
       },
       options: {
-        animation: false,
         responsive: true,
+        maintainAspectRatio: false, resizeDelay: 0,
+        animation: allZero ? false : { duration: 800 },
         plugins: { legend: { display: false } },
         scales: {
-          x: { ticks: { color: '#6b7280', font: { family: 'JetBrains Mono' } }, grid: { color: 'rgba(120,100,255,0.06)' } },
-          y: { beginAtZero: true, ticks: { stepSize: 1, color: '#6b7280' }, grid: { color: 'rgba(120,100,255,0.06)' } }
+          x: { ticks: { color: '#6b6b80', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(120,100,255,0.05)' } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: '#6b6b80', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(120,100,255,0.05)' } }
         }
       }
-    });
+});
+  // Фикс бесконечного роста
+  var chartCanvas = document.getElementById('viewsChart');
+  if (chartCanvas) {
+      chartCanvas.style.height = '250px';
+      chartCanvas.style.maxHeight = '250px';
+      chartCanvas.parentElement.style.height = '250px';
+      chartCanvas.parentElement.style.maxHeight = '250px';
+      chartCanvas.parentElement.style.overflow = 'hidden';
+  }
   });
 </script>
-
-<style>
-/* === ДАШБОРД СТИЛИ === */
-.logo-neuro { color: #c084fc; font-weight: 900; letter-spacing: 2px; }
-.logo-vizor { color: #00ff88; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(0,255,136,0.4); }
-
-.btn-home {
-    width: 36px; height: 36px; border-radius: 8px;
-    border: 1px solid rgba(120,100,255,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; color: #6b7280; text-decoration: none;
-    transition: all 0.3s;
-}
-.btn-home:hover { border-color: #c084fc; color: #c084fc; box-shadow: 0 0 15px rgba(192,132,252,0.2); }
-.btn-add-site {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: linear-gradient(135deg, #c084fc20, #00ff8820);
-    border: 1px solid #c084fc40;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; font-weight: 700; color: #c084fc;
-    transition: all 0.3s;
-}
-.btn-add-site:hover { background: linear-gradient(135deg, #c084fc40, #00ff8840); box-shadow: 0 0 20px #c084fc40; color: #fff; }
-.btn-logout { color: #ff4d6a !important; opacity: 0.7; }
-.btn-logout:hover { opacity: 1; }
-
-
-
-.section-title { color: #c084fc; font-size: 1.1rem; font-weight: 700; margin: 32px 0 16px; text-transform: uppercase; letter-spacing: 3px; }
-
-/* Сетка сайтов */
-.sites-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 32px;
-}
-.site-card-link { text-decoration: none; }
-.site-card {
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15);
-    border-radius: 12px; padding: 20px;
-    transition: all 0.3s; cursor: pointer;
-    position: relative; overflow: hidden;
-    min-height: 120px; display: flex; flex-direction: column; justify-content: center;
-}
-.site-card::before {
-    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(0,255,136,0.03) 0%, transparent 70%);
-    opacity: 0; transition: opacity 0.4s;
-}
-.site-card:hover::before { opacity: 1; }
-.site-card:hover { border-color: #00ff8860; box-shadow: 0 0 40px rgba(0,255,136,0.08); transform: translateY(-2px); }
-.site-card.active { border-color: #00ff8840; }
-.site-card.inactive { border-color: rgba(100,100,120,0.2); opacity: 0.7; }
-.site-domain { font-size: 1rem; font-weight: 700; color: #e0e0e0; text-align: center; word-break: break-all; }
-.site-type { color: #6b7280; font-size: 0.75rem; text-align: center; margin: 8px 0; text-transform: uppercase; letter-spacing: 1px; }
-.site-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #6b7280; }
-.site-status.on { color: #00ff88; }
-.site-status.off { color: #4b5563; }
-
-/* Кнопка Добавить */
-.add-card {
-    border: 1px dashed rgba(120,100,255,0.3) !important;
-    background: transparent !important;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.add-card:hover { border-color: #c084fc !important; background: rgba(192,132,252,0.03) !important; }
-.add-icon { font-size: 2.5rem; font-weight: 300; color: #c084fc60; transition: all 0.3s; }
-.add-card:hover .add-icon { color: #c084fc; transform: scale(1.2); }
-.add-label { color: #6b7280; font-size: 0.8rem; margin-top: 8px; }
-
-/* График */
-.chart-card {
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15); border-radius: 12px;
-    padding: 24px; margin-bottom: 32px;
-}
-.chart-title { color: #c084fc; font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
-
-/* Тарифы */
-.tariffs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 32px;
-}
-.tariff-card {
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15);
-    border-radius: 12px; padding: 20px; text-align: center;
-    transition: all 0.3s; position: relative; overflow: hidden;
-}
-.tariff-card::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, #c084fc, #00ff88, transparent);
-    opacity: 0; transition: opacity 0.4s;
-}
-.tariff-card:hover::after { opacity: 1; }
-.tariff-card:hover { border-color: #c084fc40; box-shadow: 0 0 30px rgba(192,132,252,0.1); transform: translateY(-2px); }
-.tariff-icon { font-size: 1.8rem; margin-bottom: 8px; }
-.tariff-name { font-weight: 700; color: #e0e0e0; font-size: 0.85rem; }
-.tariff-price { font-size: 1.3rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; background: linear-gradient(135deg, #c084fc, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 8px 0; }
-.tariff-desc { color: #6b7280; font-size: 0.75rem; }
-.tariff-byok { 
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-    padding: 3px 12px; border-radius: 20px;
-    font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    background: rgba(192,132,252,0.1); color: #c084fc; border: 1px solid rgba(192,132,252,0.2);
-}
-.tariff-card { padding-bottom: 40px; }
-
-/* Адаптив */
-@media (max-width: 768px) {
-    .sites-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .tariffs-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .site-card { padding: 16px; min-height: 100px; }
-    .metric-value { font-size: 1.6rem; }
-}
-@media (max-width: 400px) {
-    .sites-grid { grid-template-columns: 1fr 1fr; }
-    .tariffs-grid { grid-template-columns: 1fr; }
-}
-</style>
 {% endblock %}

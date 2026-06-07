@@ -1,679 +1,943 @@
 {% extends "base.html" %}
-{% block title %}AI Visibility Optimizer — Алиса видит{% endblock %}
+{% block title %}Нейровизор — Алиса видит твой бизнес{% endblock %}
+{% block description %}Платформа для нейро-видимости. Создай нейро-карточку за 3 клика. Алиса, Яндекс.Нейро и голосовые помощники найдут ваш сайт.{% endblock %}
 {% block content %}
+
 <style>
-    .hero { text-align: center; padding: 50px 16px 30px; }
-    .hero h1 { line-height: 1.15; }
-    .hero .neon-text { color: var(--neon); text-shadow: 0 0 20px rgba(192,132,252,0.5); }
-    .hero .subtitle {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        max-width: 520px;
-        margin: 12px auto 24px;
-        font-family: var(--font-mono);
+    /* ========== HERO ========== */
+    .hero {
+        padding: 30px 20px 20px;
+        text-align: center;
+        position: relative;
     }
-
-    .audit-card { max-width: 600px; margin: 0 auto 40px; }
-
-    .score-ring { width: 90px; height: 90px; margin: 0 auto 10px; position: relative; }
-    .score-ring svg { transform: rotate(-90deg); }
-    .score-ring .bg-circle { fill: none; stroke: rgba(140,120,255,0.15); stroke-width: 4; }
-    .score-ring .progress-circle { fill: none; stroke: url(#neonGrad); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
-    .score-number { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-mono); font-size: 1.5rem; font-weight: 900; color: var(--text-bright); }
-
-    .loss-text { color: var(--danger); font-weight: 700; font-size: 0.85rem; margin-top: 4px; }
-
-    .show-more-btn {
-        background: transparent; border: 1px solid var(--border); color: var(--text-muted);
-        padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;
-        font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; margin-top: 8px;
-        transition: var(--transition);
-    }
-    .show-more-btn:hover { border-color: var(--neon); color: var(--neon); }
-
-    .tariff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 780px; margin: 0 auto 50px; }
-    .tariff-card { text-align: center; padding: 24px 14px 20px; display: flex; flex-direction: column; }
-    .tariff-card.featured { border-color: var(--border-active); box-shadow: 0 0 35px rgba(124,58,237,0.1); }
-    .tariff-badge { margin-bottom: 8px; min-height: 20px; }
-    .tariff-price { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 900; margin: 6px 0; min-height: 2.2rem; }
-    .tariff-name { font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; min-height: 1.2rem; }
-    .tariff-card.featured .tariff-name { color: var(--neon); }
-    .tariff-features { color: var(--text-muted); font-size: 0.75rem; line-height: 1.5; margin: 8px 0 16px; flex: 1; min-height: 60px; }
-    .tariff-card .btn { font-family:'Inter',sans-serif; margin-top: auto; }
-
-    .btn-cyber-pulse {
-        background: transparent; border: 1px solid var(--neon-soft); color: var(--neon-soft);
-        position: relative; overflow: hidden; font-weight: 700;
-    }
-    .btn-cyber-pulse::before, .btn-cyber-pulse::after {
-        content: ''; position: absolute; top: 0; width: 50%; height: 100%;
-        background: linear-gradient(90deg, rgba(192,132,252,0.3), transparent);
-        animation: cyberConverge 2s ease-in-out infinite;
-    }
-    .btn-cyber-pulse::before { left: -50%; }
-    .btn-cyber-pulse::after { right: -50%; animation-delay: 1s; transform: scaleX(-1); }
-    @keyframes cyberConverge {
-        0% { transform: translateX(0); opacity: 0; }
-        40% { opacity: 1; } 60% { opacity: 1; }
-        100% { transform: translateX(100%); opacity: 0; }
-    }
-    .btn-cyber-pulse:hover { box-shadow: 0 0 20px rgba(192,132,252,0.35), 0 0 2px rgba(192,132,252,0.5) inset; color: #fff; border-color: var(--neon); }
-
-    .btn-neon-premium {
-        background: var(--gradient-btn); color: var(--text-bright); border: 2px solid var(--neon);
-        position: relative; overflow: hidden; font-weight: 700;
-        animation: neonGlow 2s ease-in-out infinite;
-    }
-    @keyframes neonGlow {
-        0%,100% { box-shadow: 0 0 12px rgba(192,132,252,0.3), 0 0 2px rgba(255,255,255,0.1) inset; }
-        50% { box-shadow: 0 0 28px rgba(192,132,252,0.55), 0 0 6px rgba(192,132,252,0.35) inset, 0 0 50px rgba(192,132,252,0.15); }
-    }
-    .btn-neon-premium::after {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
-        animation: diagonalSweep 3s ease-in-out infinite;
-    }
-    @keyframes diagonalSweep {
-        0% { transform: translateX(-100%) translateY(-100%); }
-        100% { transform: translateX(100%) translateY(100%); }
-    }
-
-    .btn-soft-glow {
-        background: var(--gradient-btn); color: var(--text-bright); border: 1px solid rgba(192,132,252,0.3);
-        position: relative; overflow: hidden; font-weight: 700;
-    }
-    .btn-soft-glow::after {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
-        animation: diagonalSweep 3.5s ease-in-out infinite;
-    }
-    .btn-soft-glow:hover { box-shadow: 0 0 20px rgba(124,58,237,0.35); }
-
-
-    /* Чат в стиле киберпанк */
-    .cyber-chat {
-        border: 1px solid var(--border-active);
-        box-shadow: 0 0 20px rgba(124,58,237,0.1), inset 0 0 20px rgba(0,0,0,0.2);
-    }
-    .chat-input-cyber:focus {
-        border-color: var(--neon);
-        box-shadow: 0 0 10px rgba(192,132,252,0.2);
-    }
-    .chat-send-btn:hover {
-        box-shadow: 0 0 25px rgba(124,58,237,0.5) !important;
-        transform: scale(1.02);
-    }
-    .chat-send-btn:active {
-        transform: scale(0.95);
-    }
-    /* Стили сообщений в чате */
-    .msg-user {
-        align-self: flex-end;
-        background: var(--gradient-btn);
-        color: white;
-        padding: 10px 14px;
-        border-radius: 12px 12px 4px 12px;
-        max-width: 80%;
-        font-size: 0.85rem;
-        box-shadow: 0 2px 8px rgba(124,58,237,0.2);
-    }
-    .msg-bot {
-        align-self: flex-start;
-        background: rgba(192,132,252,0.1);
-        border: 1px solid rgba(192,132,252,0.2);
-        color: var(--text);
-        padding: 10px 14px;
-        border-radius: 12px 12px 12px 4px;
-        max-width: 80%;
-        font-size: 0.85rem;
-    }
-    /* Кастомный скроллбар */
-    #demoChat::-webkit-scrollbar { width: 4px; }
-    #demoChat::-webkit-scrollbar-track { background: transparent; }
-    #demoChat::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 2px; }
-
     
-    /* Слайдер */
-    .slider-dot {
-        width: 8px; height: 8px;
+    @keyframes coordFlicker {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.9; }
+    }
+    
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(34, 211, 238, 0.08);
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        border-radius: 30px;
+        padding: 6px 16px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--neon-cyan);
+        margin-bottom: 32px;
+        animation: fadeInUp 0.6s ease both;
+    }
+    .hero-badge-dot {
+        width: 6px; height: 6px;
+        background: var(--neon-cyan);
         border-radius: 50%;
-        background: var(--border);
-        cursor: pointer;
-        transition: var(--transition);
+        animation: pulse 2s ease-in-out infinite;
     }
-    .slider-dot.active {
-        background: var(--neon);
-        box-shadow: 0 0 8px rgba(192,132,252,0.5);
+    @keyframes pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
     }
-
-    .tariff-detail {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease;
-    text-align: left;
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    padding: 0 4px;
-}
-.tariff-detail.open {
-    max-height: 300px;
-    padding: 12px 4px;
-    margin-top: 8px;
-}
-.tariff-detail p {
-    margin-bottom: 10px;
-}
-.tariff-card-land {
-    padding-bottom: 18px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 200px;
-}
-.tariff-connect {
-    margin-top: 8px;
-    font-size: 0.72rem;
-    padding: 6px 10px;
-    width: 100%;
-}
-.tariff-more {
-    margin-top: auto;
-    position: relative;
-    bottom: 4px;
-}
-.tariff-byok-land { margin-bottom: 4px; }
-
-@media (max-width: 768px) {
-        .tariff-grid { grid-template-columns: 1fr; max-width: 320px; }
-        .hero { padding: 30px 8px 20px; }
-        .audit-card { margin: 0 0 30px; }
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .cyber-gradient {
-        background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
-        background-size: 300% 100%;
-        animation: cyberFlow 3s ease infinite;
-    }
-    @keyframes cyberFlow {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    .tariff-name-grad {
-        font-family: 'Orbitron', 'JetBrains Mono', monospace;
-        font-size: 1.3rem;
+    .hero h1 {
+        font-family: var(--font-display);
+        font-size: clamp(2.2rem, 6vw, 4rem);
         font-weight: 900;
+        line-height: 1.08;
+        letter-spacing: -1.5px;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
+        animation: fadeInUp 0.6s 0.1s ease both;
+    }
+    .hero-subtitle {
+        font-size: clamp(0.95rem, 2vw, 1.15rem);
+        color: var(--text-muted);
+        max-width: 580px;
+        margin: 20px auto 32px;
+        font-family: var(--font-mono);
+        animation: fadeInUp 0.6s 0.2s ease both;
+    }
+    .hero-cta-group {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.6s 0.3s ease both;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 60px;
+        animation: fadeInUp 0.6s 0.4s ease both;
+    }
+    .hero-stat {
+        text-align: center;
+    }
+    .hero-stat-val {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--gradient-hero);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 8px;
     }
-.tariffs-landing {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 14px;
-    max-width: 1000px;
-    margin: 30px auto 50px;
-    padding: 0 12px;
-}
-.tariff-card-land {
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15);
-    border-radius: 14px; padding: 24px 16px 44px; text-align: center;
-    transition: all 0.3s; position: relative; overflow: hidden;
-}
-.tariff-card-land::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, #c084fc, #00ff88, transparent);
-    opacity: 0; transition: opacity 0.4s;
-}
-.tariff-card-land:hover::after { opacity: 1; }
-.tariff-card-land:hover { border-color: #c084fc40; box-shadow: 0 0 30px rgba(192,132,252,0.1); transform: translateY(-2px); }
-.tariff-icon-land { font-size: 2rem; margin-bottom: 8px; }
-.tariff-name-land { font-weight: 700; color: #e0e0e0; font-size: 0.9rem; }
-.tariff-price-land { font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; background: linear-gradient(135deg, #c084fc, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 8px 0; }
-.tariff-price-land span { font-size: 0.7rem; color: #6b7280; -webkit-text-fill-color: #6b7280; }
-.tariff-connect {
-    margin-top: 8px;
-    font-size: 0.72rem;
-    padding: 6px 10px;
-    width: 100%;
-}
-.tariff-more {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    background: linear-gradient(135deg, #c084fc, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    border-bottom: 1px dashed rgba(192,132,252,0.4);
-    padding-bottom: 1px;
-    transition: all 0.3s;
-    display: inline-block;
-    margin-bottom: 6px;
-}
-.tariff-more:hover {
-    border-bottom-color: #c084fc;
-    text-shadow: 0 0 10px rgba(192,132,252,0.4);
-}
-.tariff-desc-land { color: #6b7280; font-size: 0.78rem; margin-bottom: 6px; }
-.tariff-byok-land {
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-    padding: 3px 14px; border-radius: 20px;
-    font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    background: rgba(192,132,252,0.1); color: #c084fc; border: 1px solid rgba(192,132,252,0.2);
-}
-.tariff-card-land .btn { margin-top: 8px; font-size: 0.8rem; }
-@media (max-width: 768px) {
-    .tariffs-landing { grid-template-columns: 1fr; max-width: 340px; margin: 30px auto 50px; }
-}
+    .hero-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== SCANNER ========== */
+    .scanner-section {
+        padding: 0 20px 80px;
+    }
+    .scanner-card {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 32px;
+        text-align: center;
+    }
+    .scanner-input-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .scanner-input-row input {
+        flex: 1;
+        padding: 14px 18px;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid var(--border-dim);
+        border-radius: var(--radius-md);
+        color: var(--text-bright);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        outline: none;
+        transition: var(--transition-fast);
+    }
+    .scanner-input-row input:focus {
+        border-color: var(--border-glow);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .scanner-loading {
+        display: none;
+        padding: 40px 0;
+        text-align: center;
+    }
+    .scanner-ring {
+        width: 60px;
+        height: 60px;
+        border: 2px solid var(--border-dim);
+        border-top-color: var(--neon-purple);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .scanner-result { display: none; }
+    .score-circle {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 16px;
+        position: relative;
+    }
+    .score-circle svg { transform: rotate(-90deg); }
+    .score-bg { fill: none; stroke: rgba(120,100,255,0.1); stroke-width: 5; }
+    .score-fg { fill: none; stroke: url(#scoreGrad); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1.2s ease-out; }
+    .score-num {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        font-weight: 900;
+    }
+
+    /* ========== HOW IT WORKS ========== */
+    .how-section {
+        padding: 40px 20px 30px;
+    }
+    .how-step {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        padding: 24px;
+    }
+    .how-step-num {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        border-radius: 50%;
+        background: var(--gradient-hero);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 1.2rem;
+        color: #fff;
+    }
+    .how-step-text h3 {
+        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .how-step-text p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    /* ========== ALICE COMPARISON ========== */
+    .alice-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .alice-card {
+        padding: 24px;
+        text-align: center;
+    }
+    .alice-card.bad { border-color: rgba(248,113,113,0.2); }
+    .alice-card.good { border-color: rgba(52,211,153,0.3); }
+    .alice-label {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+    .alice-label.bad { color: var(--danger); }
+    .alice-label.good { color: var(--success); }
+    .alice-text {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    /* ========== PRICING ========== */
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    .pricing-card {
+        text-align: center;
+        padding: 28px 20px 36px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: visible !important;
+    }
+    
+    .pricing-card.featured {
+        border-color: rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+    }
+    .pricing-card.featured:hover { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 0 30px rgba(245, 158, 11, 0.25); }
+    .pricing-badge {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--gradient-gold);
+        color: #000;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 5;
+        white-space: nowrap;
+        line-height: 1.4;
+    }
+    .pricing-icon { font-size: 2rem; margin-bottom: 8px; }
+    .pricing-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .pricing-price {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        font-weight: 900;
+        margin: 8px 0;
+    }
+    .pricing-price span { font-size: 0.7rem; color: var(--text-dim); }
+    .pricing-features {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 20px;
+        flex: 1;
+        text-align: left;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+    .pricing-features li {
+        padding: 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pricing-features li::before {
+        content: '✓';
+        color: var(--success);
+        font-weight: 700;
+    }
+    .pricing-byok {
+        font-size: 0.65rem;
+        font-family: var(--font-mono);
+        color: var(--neon-purple);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    /* ========== FAQ ========== */
+    .faq-list {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .faq-item-fancy {
+        background: var(--bg-card);
+        border: 1px solid var(--border-dim);
+        border-radius: var(--radius-md);
+        margin-bottom: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: var(--transition-fast);
+    }
+    .faq-item-fancy:hover { border-color: var(--border-glow); }
+    .faq-q-fancy {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-height: 52px;
+        gap: 12px;
+    }
+    .faq-q-fancy span:last-child {
+        font-family: var(--font-mono);
+        color: var(--neon-purple);
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+    .faq-item-fancy.open .faq-q-fancy span:last-child { transform: rotate(45deg); }
+    .faq-a-fancy {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease, padding 0.35s ease;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        padding: 0 20px;
+        line-height: 1.6;
+    }
+    .faq-item-fancy.open .faq-a-fancy {
+        max-height: 200px;
+        padding: 0 20px 16px;
+    }
+
+    /* ========== CTA BANNER ========== */
+    .cta-banner {
+        text-align: center;
+        padding: 30px 20px 50px;
+    }
+    .cta-banner-inner {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glow);
+        border-radius: var(--radius-xl);
+        padding: 48px 24px;
+        max-width: 700px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+    }
+    
+
+        .pricing-card .btn-outline {
+        position: relative;
+        overflow: hidden;
+    }
+    .pricing-card .btn-outline::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transform: skewX(-25deg);
+    }
+    .pricing-card:hover .btn-outline::after {
+        animation: cardBtnGlint 2.5s ease-in-out infinite;
+    }
+    @keyframes cardBtnGlint {
+        0%, 100% { left: -100%; }
+        50% { left: 150%; }
+    }
+
+        /* Плитка тарифа при наведении */
+    .pricing-card:hover {
+        border-color: var(--border-glow) !important;
+        box-shadow: 0 0 25px rgba(124,58,237,0.3), 0 0 50px rgba(124,58,237,0.1) !important;
+    }
+    /* Кнопка внутри плитки при наведении */
+    .pricing-card .btn {
+        transition: box-shadow 0.3s ease;
+    }
+    .pricing-card:hover .btn {
+        box-shadow: 0 0 20px rgba(192,132,252,0.5), 0 0 40px rgba(192,132,252,0.2);
+    }
+    /* Блик по кнопке */
+    
+
+        .glint-btn {
+        position: relative;
+        overflow: hidden !important;
+    }
+    .glint-span {
+        position: relative;
+        z-index: 1;
+    }
+    .glint-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+        z-index: 0;
+    }
+    .pricing-card:hover .glint-btn::before {
+        animation: glintShine 2.5s ease-in-out infinite;
+    }
+    @keyframes glintShine {
+        0%, 100% { left: -100%; }
+        50% { left: 100%; }
+    }
+
+    
+    /* === ПЛИТКА ТАРИФА ПРИ НАВЕДЕНИИ === */
+    .pricing-card {
+        overflow: hidden;
+    }
+    .pricing-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, rgba(192,132,252,0.3) 10%, #c084fc 30%, #00ff88 70%, rgba(0,255,136,0.3) 90%, transparent 100%);
+        box-shadow: 0 0 8px rgba(192,132,252,0.3);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .pricing-card:hover {
+        border-color: var(--border-glow) !important;
+        box-shadow: 0 0 30px rgba(124,58,237,0.35), 0 0 60px rgba(124,58,237,0.12) !important;
+        transform: translateY(-4px) scale(1.02);
+    }
+    .pricing-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(192, 132, 252, 0.03) 2px,
+            rgba(192, 132, 252, 0.03) 4px
+        );
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .pricing-card:hover::before {
+        opacity: 1;
+    }
+    .pricing-card:hover::after {
+        opacity: 1;
+    }
+    /* Кнопка внутри — постоянная подсветка */
+    .pricing-card .btn {
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    .pricing-card:hover .btn {
+        box-shadow: 0 0 20px rgba(192,132,252,0.5), 0 0 40px rgba(192,132,252,0.2);
+    }
+    /* Блик — диагональный, белый, прозрачный */
+    .pricing-card .btn::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -80%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 60%, transparent 70%);
+        transform: skewX(-20deg);
+    }
+    .pricing-card:hover .btn::after {
+        animation: tariffGlint 3s ease-in-out infinite;
+    }
+    @keyframes tariffGlint {
+        0%, 100% { left: -80%; }
+        45% { left: 120%; }
+        55% { left: 120%; }
+    }
+
+    
+    
+    @media (max-width: 768px) {
+        .pricing-card.tapped {
+            border-color: var(--border-glow) !important;
+            box-shadow: 0 0 25px rgba(124,58,237,0.3), 0 0 50px rgba(124,58,237,0.1) !important;
+        }
+        .pricing-card.tapped .glint-btn::before {
+            animation: glintShine 2.5s ease-in-out infinite;
+        }
+        
+        .pricing-card:active {
+            border-color: var(--border-glow) !important;
+            box-shadow: 0 0 30px rgba(124,58,237,0.35) !important;
+        }
+        .pricing-card:active::after {
+            opacity: 1;
+        }
+        .pricing-card:active .btn {
+            box-shadow: 0 0 20px rgba(192,132,252,0.5), 0 0 40px rgba(192,132,252,0.2);
+        }
+        .pricing-card:active .btn::after {
+            animation: tariffGlint 3s ease-in-out infinite;
+        }
+
+        .hero-stats { gap: 24px; }
+        .hero-stat-val { font-size: 1.5rem; }
+        .alice-compare { grid-template-columns: 1fr; }
+        .pricing-card.featured { transform: none; }
+        .pricing-card.featured:hover { transform: translateY(-2px); }
+        .scanner-input-row { flex-direction: column; }
+    }
 </style>
 
-<div class="hero">
-    <h1><span class="neon-text">Алиса</span> видит<br>твой бизнес?</h1>
-    <p class="subtitle">Нейро-карточка в 3 клика. Без правок на сайте.</p>
-    <div class="flex flex-center flex-wrap" style="gap:8px;">
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+    <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Новое: AI-Site-Bot на всех тарифах
+    </div>
+    <h1>
+        <span class="gradient-text" style="font-size:2em;">Алиса</span><br>
+        <span style="color:var(--text-bright);">видит твой бизнес?</span>
+    </h1>
+    <p class="hero-subtitle">
+        Нейро-карточка за 3 клика. Без правок на сайте.<br>
+        Вас найдут Яндекс.Нейро, Алиса и голосовые помощники.
+    </p>
+    <div class="hero-cta-group">
         {% if session.get('user_id') %}
-        <a href="/dashboard" class="btn btn-primary">Личный кабинет</a>
-        <a href="/logout" class="btn btn-ghost">Выход</a>
+        <a href="/dashboard" class="btn btn-primary btn-lg">В дашборд</a>
         {% else %}
-        <a href="/register" class="btn btn-primary">Активировать</a>
-        <a href="/login" class="btn btn-ghost">Вход</a>
+        <a href="/register" class="btn btn-gold btn-lg">🚀 Активировать — 7 дней бесплатно</a>
+        <a href="#scanner" class="btn btn-outline btn-lg">Сканировать сайт</a>
         {% endif %}
     </div>
-</div>
-
-<div class="card audit-card">
-    <h2 style="text-align:center;">Сканирование</h2>
-    <p class="text-muted text-center mb-2 text-sm">Введи URL — узнай нейро-видимость</p>
-    <form id="auditForm">
-        <div class="flex" style="gap:6px;">
-            <input type="text" class="form-input" id="urlInput" placeholder="site.ru" required>
-            <button type="submit" class="btn btn-cyber-pulse" style="background: transparent; border: 1px solid transparent; border-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee) 1; color: transparent; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);">Сканировать</button>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="hero-stat-val">92%</div>
+            <div class="hero-stat-label">сайтов невидимы<br>для нейропоиска</div>
         </div>
-    </form>
-    <div id="loadingBlock" style="display:none; text-align:center; padding:30px 0;">
-        <div style="width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--neon);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto 12px;"></div>
-        <p class="text-muted text-sm">Анализ...</p>
+        <div class="hero-stat">
+            <div class="hero-stat-val">3×</div>
+            <div class="hero-stat-label">больше трафика<br>с нейро-карточкой</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-val">90</div>
+            <div class="hero-stat-label">FAQ за 1 сессию<br>генерации</div>
+        </div>
     </div>
-    <div id="resultBlock" style="display:none;">
-        <div class="score-ring">
-            <svg width="90" height="90" viewBox="0 0 90 90">
-                <defs><linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
-                <circle class="bg-circle" cx="45" cy="45" r="38"/>
-                <circle class="progress-circle" id="progressCircle" cx="45" cy="45" r="38" stroke-dasharray="238.8" stroke-dashoffset="238.8"/>
-            </svg>
-            <div class="score-number" id="scoreNumber">0%</div>
+</section>
+
+<!-- ==================== SCANNER ==================== -->
+<section class="scanner-section" style="padding-bottom:20px;" id="scanner">
+    <div class="card scanner-card">
+        <h2 class="h3 gradient-text">🔍 Проверь видимость сайта</h2>
+        <p class="text-muted text-sm mt-1">Введи URL — получи AEO-аудит за 30 секунд</p>
+        <form id="scanForm">
+            <div class="scanner-input-row">
+                <input type="text" id="scanUrl" placeholder="site.ru" required>
+                <button type="submit" class="btn btn-primary">Сканировать</button>
+            </div>
+        </form>
+        <div class="scanner-loading" id="scanLoading">
+            <div class="scanner-ring"></div>
+            <p class="text-muted text-sm">Анализируем сайт...</p>
         </div>
-        <p class="text-center mb-1 text-sm" id="scoreMessage"></p>
-        <p class="text-center loss-text" id="lossText" style="display:none;"></p>
-        <div class="grid-2 mb-2">
-            <div class="card" style="text-align:center;padding:10px;"><div style="font-size:1.2rem;font-weight:800;color:var(--neon);" id="faqCount">0</div><div class="text-muted text-sm">FAQ сгенерировано</div></div>
+        <div class="scanner-result" id="scanResult">
+            <div class="score-circle">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs>
+                    <circle class="score-bg" cx="50" cy="50" r="42"/>
+                    <circle class="score-fg" id="scoreFg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+                </svg>
+                <div class="score-num gradient-text" id="scoreNum">0%</div>
+            </div>
+            <p class="text-sm" id="scoreMsg"></p>
+            <p class="text-sm" style="color:var(--danger);" id="lossMsg"></p>
+            <div id="scanFaq" style="margin-top:16px;"></div>
+            <div style="margin-top:20px;">
+                <a href="/register" class="btn btn-gold">Исправить — 7 дней бесплатно</a>
+            </div>
         </div>
-        
-        <div id="aliceSection" style="display:none; margin-top: 20px; background: rgba(124,58,237,0.05); border: 1px solid var(--border-active); border-radius: var(--radius); padding: 16px;">
-            <h3 class="mb-2 text-sm" style="color: var(--neon); font-family: var(--font-mono);">🔮 Что ответит Алиса</h3>
-            <div class="compare-row">
-                <div class="compare-card before">
-                    <div class="compare-label bad">⬤ Сейчас</div>
-                    <div class="compare-text" id="aliceBefore"><em>Генерируем...</em></div>
+    </div>
+</section>
+
+<!-- ==================== HOW IT WORKS ==================== -->
+<section class="how-section" id="how">
+    <div class="container">
+        <h2 class="h2 text-center mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">Как <span class="gradient-text">работает</span></h2>
+        <div class="grid-2">
+            <div class="card how-step">
+                <div class="how-step-num">1</div>
+                <div class="how-step-text">
+                    <h3>Сканирование сайта</h3>
+                    <p>ИИ анализирует структуру и контент вашего сайта, выделяя ключевые сущности</p>
                 </div>
-                <div class="compare-card after">
-                    <div class="compare-label good">⬤ С нейро-карточкой</div>
-                    <div class="compare-text" id="aliceAfter"><em>Генерируем...</em></div>
+            </div>
+            <div class="card how-step">
+                <div class="how-step-num">2</div>
+                <div class="how-step-text">
+                    <h3>Генерация FAQ</h3>
+                    <p>Создаём до 90 вопросов-ответов на основе реальных запросов вашей ниши</p>
+                </div>
+            </div>
+            <div class="card how-step">
+                <div class="how-step-num">3</div>
+                <div class="how-step-text">
+                    <h3>Нейро-карточка</h3>
+                    <p>Структурированные данные Schema.org, понятные поисковым нейросетям</p>
+                </div>
+            </div>
+            <div class="card how-step">
+                <div class="how-step-num">4</div>
+                <div class="how-step-text">
+                    <h3>Алиса отвечает</h3>
+                    <p>Даже на непрямой запрос ИИ-ассистент находит вашу карточку и цитирует вас</p>
                 </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <div id="noFaqMessage" style="display:none; text-align:center; padding:20px; color:var(--text-muted);">FAQ не сгенерирован. Попробуйте другой сайт.</div>
-        <div id="faqSection" style="display:none;">
-            <h3 class="mb-2 text-sm">Сгенерированные FAQ</h3>
-            <div id="faqList"></div>
-            <div class="text-center">
-                <button class="show-more-btn" id="showMoreFaq" style="display:none;" onclick="toggleFaq()">Показать ещё <span id="faqRemaining">7</span> вопросов</button>
+<!-- ==================== ALICE COMPARISON ==================== -->
+<section style="padding:0 20px 30px;">
+    <div class="container">
+        <h2 class="h2 text-center mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">Что ответит <span class="gradient-text" style="font-size:2em;">Алиса</span></h2>
+        <div class="alice-compare">
+            <div class="card alice-card bad">
+                <div class="alice-label bad">⬤ Без нейро-карточки</div>
+                <div class="alice-text">«Я не нашла информацию о компании в своём поиске.»</div>
+            </div>
+            <div class="card alice-card good">
+                <div class="alice-label good">⬤ С нейро-карточкой</div>
+                <div class="alice-text">«По данным с сайта: компания работает с 9 до 21, доставка по городу бесплатно...»</div>
             </div>
         </div>
-
-        <div id="chatSection" style="display:none; margin-top: 24px;">
-            <h3 class="mb-2 text-sm" style="text-align:center;">Попробуй <span style="color:var(--neon);">AI</span>-SITE-BOT на своём сайте</h3>
-            <p class="text-muted text-sm mb-2">Бот отвечает на основе данных с сайта</p>
-            <div class="card cyber-chat" style="padding:0; overflow:hidden;">
-                <!-- Окно сообщений -->
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;" id="chatHints">
-                <span onclick="askHint('Какие у вас цены?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">💰 Цены</span>
-                <span onclick="askHint('Как заказать?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">📦 Заказ</span>
-                <span onclick="askHint('Какая доставка?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">🚚 Доставка</span>
-                <span onclick="askHint('Как связаться?')" style="cursor:pointer; background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:4px 10px; font-size:0.7rem; color:var(--neon-soft);">📞 Контакты</span>
-            </div>
-            <div id="demoChat" style="height:280px; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.3); scrollbar-width:thin; scrollbar-color:var(--neon) transparent;">
-                </div>
-                <!-- Полоска-разделитель с неоном -->
-                <div style="height:1px; background:linear-gradient(90deg, transparent, var(--neon), transparent); opacity:0.5;"></div>
-                <!-- Поле ввода -->
-                <div style="display:flex; gap:0; padding:8px; background:rgba(10,8,30,0.9);">
-                    <input type="text" class="chat-input-cyber" id="chatInput" placeholder="Спросите бота..."  style="flex:1; padding:12px 16px; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-right:none; border-radius:var(--radius-sm) 0 0 var(--radius-sm); color:var(--text-bright); font-family:var(--font-mono); font-size:0.85rem; outline:none; transition:var(--transition);">
-                    <button onclick="sendChat()" id="chatSendBtn" class="chat-send-btn" style="padding:12px 18px; background:var(--gradient-btn); border:none; border-radius:0 var(--radius-sm) var(--radius-sm) 0; color:white; cursor:pointer; font-size:1.2rem; transition:all 0.2s ease; box-shadow:0 0 15px rgba(124,58,237,0.3);">→</button>
-                </div>
-            </div>
-            <p class="text-muted text-sm mt-1" id="chatCounter">Осталось: 5 вопросов</p>
-        </div>
-
-        <div class="text-center mt-2">
-
-            <p class="text-muted text-sm mt-1">7 дней бесплатно</p>
-        </div>
     </div>
-</div>
+</section>
 
-
-        
-        
-        <!-- Как это работает -->
-        <div class="how-it-works" style="max-width:600px; margin: 0 auto;">
-            <h3 class="text-center mb-2" style="font-family:var(--font-mono); font-weight:800; font-size:1.5rem; text-transform:uppercase; letter-spacing:-0.3px;">КАК ЭТО РАБОТАЕТ</h3>
-            <div class="slider-container" style="position:relative; overflow:hidden; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); backdrop-filter:blur(16px);">
-                <div id="sliderTrack" style="display:flex; transition:transform 0.5s ease;">
-                    <!-- Слайд 1 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Сканирование</span> сайта</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Мы анализируем ваш сайт и собираем всю ключевую информацию</p>
-                    </div>
-                    <!-- Слайд 2 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Плотный слой</span> захвата</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Генерация 10 FAQ для сайта и до 90 FAQ для нейро-карточки на основе реальных запросов вашей ниши</p>
-                    </div>
-                    <!-- Слайд 3 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Нейро</span>-карточка</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Создаём внешнюю страницу со структурированными данными, которую понимают нейросети</p>
-                    </div>
-                    <!-- Слайд 4 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">AEO</span>-оптимизация</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Answer Engine Optimization — делаем ваш сайт источником ответов для Алисы и голосовых помощников</p>
-                    </div>
-                    <!-- Слайд 5 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">GEO</span>-продвижение</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Generative Engine Optimization — ваш бренд цитируют Яндекс.Нейро и Алиса</p>
-                    </div>
-                    <!-- Слайд 6 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Алиса</span> отвечает</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Даже на непрямой запрос Алиса находит нейро-карточку, видит FAQ и отвечает</p>
-                    </div>
-                    <!-- Слайд 7 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Чат-бот</span> как ассистент</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">AI-SITE-BOT обучен на вашем сайте и отвечает клиентам 24/7. Как личная Алиса для вашего бизнеса</p>
-                    </div>
-                    <!-- Слайд 8 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">Внешний</span> контур</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Нейро-карточка и чат-бот работают снаружи. На сайте — только одна строка кода для виджета. Все изменения обратимы</p>
-                    </div>
-                    <!-- Слайд 9 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">UGC</span>-пакет</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">До 50 генераций в месяц для любых площадок: VK, Telegram, Яндекс.Карты, 2ГИС, Avito, VC.ru. Продвижение вашего продукта</p>
-                    </div>
-                    <!-- Слайд 10 -->
-                    <div class="slide" style="min-width:100%; padding:40px 28px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:180px;">
-                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.6rem; text-transform:uppercase; letter-spacing:-0.3px; margin-bottom:12px; color:var(--text-bright);"><span style="color:var(--neon);">VK</span> Mini App</div>
-                        <p style="color:#b0b0c0; font-size:0.95rem; line-height:1.7;">Мини-приложение, которое подстроится под ваш бизнес. Адвокату — секретарь, продавцу — витрина, салону — администратор</p>
-                    </div></div>
-                </div>
-                <div style="display:flex; justify-content:center; gap:8px; padding:12px;">
-                    <span class="slider-dot active" onclick="goToSlide(0)"></span>
-                    <span class="slider-dot" onclick="goToSlide(1)"></span>
-                    <span class="slider-dot" onclick="goToSlide(2)"></span>
-                    <span class="slider-dot" onclick="goToSlide(3)"></span>
-                    <span class="slider-dot" onclick="goToSlide(4)"></span>
-                    <span class="slider-dot" onclick="goToSlide(5)"></span>
-                    <span class="slider-dot" onclick="goToSlide(6)"></span>
-                    <span class="slider-dot" onclick="goToSlide(7)"></span>
-                    <span class="slider-dot" onclick="goToSlide(8)"></span>
-                    <span class="slider-dot" onclick="goToSlide(9)"></span>
-                </div>
+<!-- ==================== PRICING ==================== -->
+<section id="pricing" style="padding:0 20px 30px;">
+    <div class="container">
+        <h2 class="h2 text-center mb-1" style="font-size:clamp(1.8rem,4vw,2.4rem);">Тарифы</h2>
+        <p class="text-muted text-center mb-3 text-sm">7 дней пробного периода на всех тарифах, кроме BUSINESS</p>
+        <div class="pricing-grid">
+            <!-- Lite -->
+            <div class="card pricing-card">
+                <div class="pricing-icon">⚡</div>
+                <div class="pricing-name">Lite</div>
+                <div class="pricing-price" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 30%,#6366f1 60%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">399<span>₽/мес</span></div>
+                <ul class="pricing-features">
+                    <li>Нейро-карточка</li>
+                    <li>FAQ-разметка</li>
+                    <li>Schema.org</li>
+                </ul>
+                <div class="pricing-byok">BYOK</div>
+                <a href="/register?tariff=lite" class="btn btn-outline btn-sm w-full">Подключить</a>
+            </div>
+            <!-- Базовый -->
+            <div class="card pricing-card featured">
+                <div class="pricing-badge">Популярный</div>
+                <div class="pricing-icon">🔮</div>
+                <div class="pricing-name">Базовый</div>
+                <div class="pricing-price" style="background:linear-gradient(135deg,#ef4444 0%,#f97316 30%,#fbbf24 60%,#fef3c7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">599<span>₽/мес</span></div>
+                <ul class="pricing-features">
+                    <li>Нейро-карточка</li>
+                    <li>FAQ-разметка</li>
+                    <li>Schema.org</li>
+                    <li>Наши токены</li>
+                </ul>
+                <div class="pricing-byok" style="visibility:hidden;">-</div>
+                <a href="/register?tariff=basic" class="btn btn-gold btn-sm w-full">Попробовать</a>
+            </div>
+            <!-- 2.0 -->
+            <div class="card pricing-card">
+                <div class="pricing-icon">🤖</div>
+                <div class="pricing-name">2.0</div>
+                <div class="pricing-price" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 30%,#6366f1 60%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">799<span>₽/мес</span></div>
+                <ul class="pricing-features">
+                    <li>Нейро-карточка</li>
+                    <li>FAQ-разметка</li>
+                    <li>AI-чат-бот</li>
+                </ul>
+                <div class="pricing-byok">BYOK</div>
+                <a href="/register?tariff=pro2" class="btn btn-outline btn-sm w-full">Подключить</a>
+            </div>
+            <!-- PRO -->
+            <div class="card pricing-card">
+                <div class="pricing-icon">👑</div>
+                <div class="pricing-name">PRO</div>
+                <div class="pricing-price" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 30%,#6366f1 60%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">999<span>₽/мес</span></div>
+                <ul class="pricing-features">
+                    <li>Нейро-карточка</li>
+                    <li>FAQ-разметка</li>
+                    <li>AI-чат-бот</li>
+                    <li>Наши токены</li>
+                </ul>
+                <div class="pricing-byok" style="visibility:hidden;">-</div>
+                <a href="/register?tariff=pro" class="btn btn-outline btn-sm w-full">Подключить</a>
+            </div>
+            <!-- BUSINESS -->
+            <div class="card pricing-card">
+                <div class="pricing-icon">🚀</div>
+                <div class="pricing-name">BUSINESS</div>
+                <div class="pricing-price" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 30%,#6366f1 60%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">1 599<span>₽/мес</span></div>
+                <ul class="pricing-features">
+                    <li>Нейро-карточка</li>
+                    <li>FAQ + Чат-бот</li>
+                    <li>VK Mini App</li>
+                    <li>UGC-генератор</li>
+                </ul>
+                <div class="pricing-byok" style="visibility:hidden;">-</div>
+                <a href="/register?tariff=business" class="btn btn-outline btn-sm w-full">Подключить</a>
             </div>
         </div>
+    </div>
+</section>
 
-<div class="tariffs-landing" id="tariffsLanding">
-    <!-- Lite -->
-    <div class="tariff-card-land">
-        <div class="tariff-icon-land">⚡</div>
-        <div class="tariff-name-land">Нейровизор Lite</div>
-        <div class="tariff-price-land">399₽<span>/мес</span></div>
-        <div class="tariff-desc-land">нейро-карточка + FAQ</div>
-        <div class="tariff-byok-land">BYOK</div>
-        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
-        <a href="{% if session.get("user_id") %}/dashboard/sites/new?tariff=lite{% else %}/register?tariff=lite{% endif %}" class="btn btn-neon w-full tariff-connect">Подключить</a>
-        <div class="tariff-detail">
-            <p>Нейро-карточка с FAQ-разметкой Schema.org для вашего сайта. Алиса и Яндекс.Нейро начнут видеть ответы на вопросы клиентов. Вы получаете готовый код для вставки на сайт. Работает на ваших токенах (BYOK).</p>
-            
+<!-- ==================== FAQ ==================== -->
+<section id="faq" style="padding:0 20px 30px;">
+    <div class="container">
+        <h2 class="h2 text-center mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">Частые <span class="gradient-text">вопросы</span></h2>
+        <div class="faq-list">
+            <div class="faq-item-fancy" onclick="this.classList.toggle('open')">
+                <div class="faq-q-fancy"><span>Что такое нейро-карточка?</span><span>+</span></div>
+                <div class="faq-a-fancy">Это внешняя страница со структурированными данными Schema.org, которую понимают нейросети — Алиса, Яндекс.Нейро, Siri. Одна строка кода на сайте — и ваш бизнес становится видимым для ИИ-поиска.</div>
+            </div>
+            <div class="faq-item-fancy" onclick="this.classList.toggle('open')">
+                <div class="faq-q-fancy"><span>Нужно ли менять сайт?</span><span>+</span></div>
+                <div class="faq-a-fancy">Нет. Вы добавляете одну строку кода для виджета. Вся нейро-карточка и FAQ хранятся на наших серверах. Ваш сайт не меняется.</div>
+            </div>
+            <div class="faq-item-fancy" onclick="this.classList.toggle('open')">
+                <div class="faq-q-fancy"><span>Что даёт нейро-видимость?</span><span>+</span></div>
+                <div class="faq-a-fancy">Когда пользователь спрашивает Алису «Где купить...», «Кто делает...» — она ищет структурированные данные. Без нейро-карточки она скажет «Я не нашла». С ней — процитирует ваш сайт. Это +30-50% к трафику из нейропоиска.</div>
+            </div>
+            <div class="faq-item-fancy" onclick="this.classList.toggle('open')">
+                <div class="faq-q-fancy"><span>Как отключить?</span><span>+</span></div>
+                <div class="faq-a-fancy">Удаляете строку кода с сайта — всё. Никаких следов. Никаких обязательств.</div>
+            </div>
         </div>
     </div>
-    <!-- Базовый -->
-    <div class="tariff-card-land">
-        <div class="tariff-icon-land">🔮</div>
-        <div class="tariff-name-land">Нейровизор</div>
-        <div class="tariff-price-land">599₽<span>/мес</span></div>
-        <div class="tariff-desc-land">нейро-карточка + FAQ</div>
-        <div class="tariff-byok-land" style="visibility:hidden">-</div>
-        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
-        <a href="{% if session.get("user_id") %}/dashboard/sites/new?tariff=basic{% else %}/register?tariff=basic{% endif %}" class="btn btn-neon w-full tariff-connect">Подключить</a>
-        <div class="tariff-detail">
-            <p>Всё из Lite, но на наших токенах. Не нужно настраивать BYOK — просто добавьте сайт и получите готовую нейро-карточку. Идеально для быстрого старта.</p>
-            
-        </div>
-    </div>
-    <!-- 2.0 -->
-    <div class="tariff-card-land">
-        <div class="tariff-icon-land">🤖</div>
-        <div class="tariff-name-land">Нейровизор 2.0</div>
-        <div class="tariff-price-land">799₽<span>/мес</span></div>
-        <div class="tariff-desc-land">+ чат-бот на сайте</div>
-        <div class="tariff-byok-land">BYOK</div>
-        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
-        <a href="{% if session.get("user_id") %}/dashboard/sites/new?tariff=pro2{% else %}/register?tariff=pro2{% endif %}" class="btn btn-neon w-full tariff-connect">Подключить</a>
-        <div class="tariff-detail">
-            <p>Нейро-карточка + FAQ + ИИ-чат-бот, обученный на контенте вашего сайта. Бот отвечает клиентам 24/7, используя информацию с сайта. Работает на ваших токенах (BYOK).</p>
-            
-        </div>
-    </div>
-    <!-- PRO -->
-    <div class="tariff-card-land">
-        <div class="tariff-icon-land">👑</div>
-        <div class="tariff-name-land">Нейровизор PRO</div>
-        <div class="tariff-price-land">999₽<span>/мес</span></div>
-        <div class="tariff-desc-land">+ чат-бот на сайте</div>
-        <div class="tariff-byok-land" style="visibility:hidden">-</div>
-        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
-        <a href="{% if session.get("user_id") %}/dashboard/sites/new?tariff=pro{% else %}/register?tariff=pro{% endif %}" class="btn btn-neon w-full tariff-connect">Подключить</a>
-        <div class="tariff-detail">
-            <p>Нейро-карточка + FAQ + чат-бот на наших токенах. Максимальная производительность без настройки BYOK. Бот обучается на всех страницах сайта и отвечает клиентам мгновенно.</p>
-            
-        </div>
-    </div>
-    <!-- BUSINESS -->
-    <div class="tariff-card-land">
-        <div class="tariff-icon-land">🚀</div>
-        <div class="tariff-name-land">Нейровизор BUSINESS</div>
-        <div class="tariff-price-land">1 599₽<span>/мес</span></div>
-        <div class="tariff-desc-land">+ VK Mini App + UGC</div>
-        <div class="tariff-byok-land" style="visibility:hidden">-</div>
-        <span class="tariff-more" onclick="toggleTariff(this)">Подробнее</span>
-        <a href="{% if session.get("user_id") %}/dashboard/sites/new?tariff=business{% else %}/register?tariff=business{% endif %}" class="btn btn-neon w-full tariff-connect">Подключить</a>
-        <div class="tariff-detail">
-            <p>Полный пакет: нейро-карточка + FAQ + чат-бот + VK Mini App с автозапуском + UGC-генератор (30 запросов/мес). Всё на наших токенах. Для бизнеса, который хочет быть везде.</p>
-            
-        </div>
-    </div>
-</div>
+</section>
 
+<!-- ==================== CTA BANNER ==================== -->
+<section class="cta-banner">
+    <div class="cta-banner-inner">
+        <h2 class="h2 mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">Готовы стать <span class="gradient-text">видимым</span>?</h2>
+        <p class="text-muted mb-3" style="max-width:400px;margin:0 auto 24px;">7 дней бесплатно. Без карты. Без скрытых платежей.</p>
+        {% if session.get('user_id') %}
+        <a href="/dashboard" class="btn btn-gold btn-lg">В дашборд</a>
+        {% else %}
+        <a href="/register" class="btn btn-gold btn-lg">🚀 Начать бесплатно</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Mobile tap handler for pricing cards -->
 <script>
-    let allFaq = [];
-    let showingAll = false;
-    let chatQuestionsLeft = 5;
-    let currentDomain = '';
-    let currentSiteId = '';
-
-    document.getElementById('chatInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendChat(); });
-    function askHint(question) { document.getElementById('chatInput').value = question; sendChat(); }
-    function sendChat() {
-        const input = document.getElementById('chatInput');
-        const msg = input.value.trim();
-        if (!msg || chatQuestionsLeft <= 0) return;
-        const demoChat = document.getElementById('demoChat');
-        demoChat.innerHTML += '<div class="msg-user">' + msg + '</div>';
-        input.value = '';
-        chatQuestionsLeft--;
-        document.getElementById('chatCounter').textContent = 'Осталось: ' + chatQuestionsLeft + ' вопросов';
-        if (chatQuestionsLeft <= 0) {
-            document.getElementById('chatInput').disabled = true;
-            document.getElementById('chatSendBtn').disabled = true;
-            document.getElementById('chatCounter').textContent = 'Лимит исчерпан. Зарегистрируйтесь — первые 7 дней бесплатно.';
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.pricing-card').forEach(function(card) {
+        function tap() {
+            card.classList.add('tapped');
+            setTimeout(function() { card.classList.remove('tapped'); }, 3000);
         }
-        fetch('/bot/chat', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({question: msg, domain: currentDomain, site_id: currentSiteId})
-        })
-        .then(r => r.json())
-        .then(data => {
-            demoChat.innerHTML += '<div class="msg-bot">🤖 ' + (data.answer || '...') + '</div>';
-            demoChat.scrollTop = demoChat.scrollHeight;
-        })
-        .catch(() => {
-            demoChat.innerHTML += '<div class="msg-bot" style="color:var(--danger);">🤖 Ошибка. Попробуйте позже.</div>';
-        });
-    }
-
-    function generateAliceAnswers(domain, title, faq) {
-        const aliceSection = document.getElementById('aliceSection');
-        aliceSection.style.display = 'block';
-        const beforeEl = document.getElementById('aliceBefore');
-        const questions = faq.slice(0, 2).map(function(f) { return f.q; });
-        const randomQ = questions[Math.floor(Math.random() * questions.length)] || 'ваши услуги';
-        beforeEl.innerHTML = '🗣️ <em>«Алиса, ' + randomQ + '»</em><br><br>🤖 <em>«Я не нашла информацию о компании «' + title + '» в своём поиске.»</em>';
-        const afterEl = document.getElementById('aliceAfter');
-        const answer = faq.length > 0 ? faq[0].a : 'Вся информация доступна на сайте.';
-        afterEl.innerHTML = '🗣️ <em>«Алиса, ' + randomQ + '»</em><br><br>🤖 <em>«По данным с сайта «' + title + '»: ' + answer.substring(0, 120) + '...»</em>';
-    }
-
-    document.getElementById('auditForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const url = document.getElementById('urlInput').value;
-        document.getElementById('loadingBlock').style.display = 'block';
-        document.getElementById('resultBlock').style.display = 'none';
-        try {
-            const formData = new FormData(); formData.append('url', url);
-            const response = await fetch('/demo', { method: 'POST', body: formData });
-            const data = await response.json(); console.log('DEMO RESPONSE:', data);
-            document.getElementById('loadingBlock').style.display = 'none';
-            document.getElementById('resultBlock').style.display = 'block';
-            if (data.success) {
-                const score = data.ai_visibility_score || 0;
-                const circle = document.getElementById('progressCircle');
-                circle.style.strokeDashoffset = 238.8 - (score / 100) * 238.8;
-                let current = 0;
-                const step = score / 30;
-                const counter = setInterval(() => {
-                    current += step;
-                    if (current >= score) { current = score; clearInterval(counter); }
-                    document.getElementById('scoreNumber').textContent = Math.round(current) + '%';
-                }, 25);
-                document.getElementById('scoreMessage').textContent = score >= 70 ? '✅ Высокая (70-100%)' : score >= 40 ? '⚠️ Средняя (40-69%)' : '🔴 Критическая (0-39%)';
-                const lossEl = document.getElementById('lossText');
-                if (score < 70) {
-                    lossEl.textContent = 'Вы теряете клиентов по ' + (100 - score) + '% запросов. Алиса не находит ваш сайт.';
-                    lossEl.style.display = 'block';
-                } else {
-                    lossEl.style.display = 'none';
-                }
-                document.getElementById('faqCount').textContent = (data.faq || []).length;
-                allFaq = data.faq || [];
-                showingAll = false;
-                renderFaq(allFaq.slice(0, 3));
-                const showMoreBtn = document.getElementById('showMoreFaq');
-                if (allFaq.length > 3) {
-                    document.getElementById('faqRemaining').textContent = allFaq.length - 3;
-                    showMoreBtn.style.display = 'inline-block';
-                } else {
-                    showMoreBtn.style.display = 'none';
-                }
-                if (allFaq.length > 0) {
-                    document.getElementById('faqSection').style.display = 'block';
-                    document.getElementById('noFaqMessage').style.display = 'none';
-                    generateAliceAnswers(data.domain, data.title, allFaq);
-                } else {
-                    document.getElementById('faqSection').style.display = 'none';
-                    document.getElementById('noFaqMessage').style.display = 'block';
-                }
-                document.getElementById('chatSection').style.display = 'block';
-                currentDomain = data.domain;
-                currentSiteId = data.site_id || '';
-                chatQuestionsLeft = 5;
-                document.getElementById('chatCounter').textContent = 'Осталось: 5 вопросов';
-                document.getElementById('chatInput').disabled = false;
-                document.getElementById('chatSendBtn').disabled = false;
-                document.getElementById('demoChat').innerHTML = '';
-            }
-        } catch (error) {
-            document.getElementById('loadingBlock').style.display = 'none';
-            document.getElementById('resultBlock').style.display = 'block';
-            document.getElementById('scoreMessage').textContent = 'Сервер временно недоступен. Попробуйте позже.';
-        }
+        card.addEventListener('touchstart', tap);
+        card.addEventListener('click', tap);
     });
-
-    let currentSlide = 0;
-    const totalSlides = 10;
-    function goToSlide(n) {
-        currentSlide = n;
-        document.getElementById('sliderTrack').style.transform = 'translateX(-' + (n * 100) + '%)';
-        document.querySelectorAll('.slider-dot').forEach(function(dot, i) { dot.classList.toggle('active', i === n); });
-    }
-    setInterval(function() { currentSlide = (currentSlide + 1) % totalSlides; goToSlide(currentSlide); }, 7000);
-
-    function escapeHtml(str) { var div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-    function renderFaq(faqSubset) {
-        const faqList = document.getElementById('faqList');
-        let html = '';
-        for (let i = 0; i < faqSubset.length; i++) {
-            html += '<div class="faq-item" onclick="this.classList.toggle(\'open\')"><div class="faq-q"><span>' + escapeHtml(faqSubset[i].q) + '</span><span>▾</span></div><div class="faq-a">' + escapeHtml(faqSubset[i].a) + '</div></div>';
-        }
-        faqList.innerHTML = html;
-    }
-
-    function toggleFaq() {
-        showingAll = !showingAll;
-        if (showingAll) {
-            renderFaq(allFaq);
-            document.getElementById('showMoreFaq').textContent = 'Скрыть';
-        } else {
-            renderFaq(allFaq.slice(0, 3));
-            document.getElementById('showMoreFaq').innerHTML = 'Показать ещё <span id="faqRemaining">' + (allFaq.length - 3) + '</span> вопросов';
-        }
-    }
+});
 </script>
+
+<!-- ==================== SCANNER JS ==================== -->
 <script>
-function toggleTariff(el) {
-    var card = el.closest('.tariff-card-land');
-    var detail = card.querySelector('.tariff-detail');
-    detail.classList.toggle('open');
+document.getElementById('scanForm').addEventListener('submit', async function(e) {
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var particles = [];
+    var w, h;
+    var waveActive = false;
+    var waveTimer = null;
+
+    function resize() {
+        w = canvas.width = canvas.offsetWidth || window.innerWidth;
+        h = canvas.height = canvas.offsetHeight || 400;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function createWave() {
+        particles = [];
+        var count = 30;
+        for (var i = 0; i < count; i++) {
+            particles.push({
+                x: -20 - i * 8,
+                y: h / 2 + (Math.random() - 0.5) * h * 0.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                vx: 2.5 + Math.random() * 2,
+                life: 1,
+                decay: 0.008 + Math.random() * 0.015,
+                size: 1.5 + Math.random() * 3,
+                hue: Math.random() < 0.5 ? 260 + Math.random() * 40 : 170 + Math.random() * 30
+            });
+        }
+        waveActive = true;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, w, h);
+        if (!waveActive) {
+            requestAnimationFrame(draw);
+            return;
+        }
+        var allDead = true;
+        particles.forEach(function(p) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= p.decay;
+            if (p.life <= 0) return;
+            allDead = false;
+            var alpha = p.life * 0.7;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsla(' + p.hue + ', 80%, 70%, ' + alpha + ')';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsla(' + p.hue + ', 80%, 70%, ' + (alpha * 0.2) + ')';
+            ctx.fill();
+        });
+        if (allDead) {
+            waveActive = false;
+        }
+        requestAnimationFrame(draw);
+    }
+
+    // Запускаем волну каждые 6 секунд
+    function scheduleWave() {
+        waveTimer = setTimeout(function() {
+            createWave();
+            scheduleWave();
+        }, 6000);
+    }
+    createWave();
+    scheduleWave();
+
+    draw();
+})();
+</script>
+
+<!-- ==================== SCANNER JS ==================== -->
+<script>
+document.getElementById('scanForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var url = document.getElementById('scanUrl').value.trim();
+    if (!url) return;
+    var btn = this.querySelector('button');
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Идёт анализ...';
+    document.getElementById('scanLoading').style.display = 'block';
+    document.getElementById('scanResult').style.display = 'none';
+
+    try {
+        var fd = new FormData(); fd.append('url', url);
+        var r = await fetch('/demo', { method: 'POST', body: fd });
+        var d = await r.json();
+        document.getElementById('scanLoading').style.display = 'none';
+        document.getElementById('scanResult').style.display = 'block';
+
+        if (d.success) {
+            var score = d.ai_visibility_score || 0;
+            var circle = document.getElementById('scoreFg');
+            var dash = 263.9 - (score / 100) * 263.9;
+            circle.style.strokeDashoffset = dash;
+            var cur = 0;
+            var step = score / 40;
+            var intv = setInterval(function() {
+                cur += step;
+                if (cur >= score) { cur = score; clearInterval(intv); }
+                document.getElementById('scoreNum').textContent = Math.round(cur) + '%';
+            }, 20);
+
+            var msgs = {
+                high: '✅ Высокая видимость — Алиса вас находит',
+                mid: '⚠️ Средняя — есть над чем работать',
+                low: '🔴 Критическая — вы теряете клиентов'
+            };
+            var lvl = score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
+            document.getElementById('scoreMsg').textContent = msgs[lvl];
+            var loss = document.getElementById('lossMsg');
+            if (score < 70) {
+                loss.textContent = 'Вы теряете клиентов по ' + (100-score) + '% запросов к Алисе';
+                loss.style.display = 'block';
+            } else { loss.style.display = 'none'; }
+
+            var faqHtml = '';
+            (d.faq || []).slice(0,3).forEach(function(f) {
+                faqHtml += '<div class="faq-item-fancy" onclick="this.classList.toggle(\'open\')"><div class="faq-q-fancy"><span>'+escapeHtml(f.q)+'</span><span>+</span></div><div class="faq-a-fancy">'+escapeHtml(f.a)+'</div></div>';
+            });
+            document.getElementById('scanFaq').innerHTML = faqHtml ? '<p class="text-sm text-muted mb-1">Сгенерированные FAQ:</p>'+faqHtml : '';
+        }
+    } catch(err) {
+        document.getElementById('scanLoading').style.display = 'none';
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('scoreMsg').textContent = 'Сервер временно недоступен. Попробуйте позже.';
+    }
+    btn.disabled = false;
+    btn.textContent = orig;
+});
+
+function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 </script>
 {% endblock %}

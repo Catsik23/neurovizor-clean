@@ -1,1 +1,204 @@
-{% extends "base.html" %}{% block content %}<div class="card" style="max-width:420px;margin:60px auto;"><h2 class="text-center">Регистрация</h2><form method="POST"><div class="form-group"><input type="email" name="email" class="form-input" placeholder="Email" required></div><div class="form-group"><input type="password" name="password" class="form-input" placeholder="Пароль" required></div><div class="form-group"><input type="password" name="password2" class="form-input" placeholder="Повторите пароль" required></div><button type="submit" class="btn btn-primary w-full mt-2">Зарегистрироваться</button></form></div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Регистрация — Нейровизор{% endblock %}
+{% block description %}Создайте аккаунт и получите 7 дней бесплатного доступа ко всем функциям Нейровизора.{% endblock %}
+{% block content %}
+
+<style>
+    .register-container {
+        max-width: 480px;
+        margin: 60px auto;
+        padding: 0 20px;
+    }
+    .register-card {
+        padding: 36px 28px;
+    }
+    .register-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+    .register-header h1 {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+    }
+    .register-benefits {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+    .register-benefit {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+    }
+    .register-benefit span:first-child { color: var(--success); }
+    .register-separator {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        color: var(--text-dim);
+        font-size: 0.7rem;
+        font-family: var(--font-mono);
+    }
+    .register-separator::before,
+    .register-separator::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-dim);
+    }
+    .social-btn {
+        width: 100%;
+        padding: 12px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-dim);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: var(--transition-fast);
+        min-height: 46px;
+    }
+    .social-btn:hover { border-color: var(--border-glow); background: rgba(255,255,255,0.05); }
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .login-link a { color: var(--neon-purple); text-decoration: none; font-weight: 600; }
+    .login-link a:hover { text-decoration: underline; }
+</style>
+
+<div class="register-container">
+    <div class="card register-card">
+        <div class="register-header">
+            <h1 class="gradient-text">Регистрация</h1>
+            <p class="text-muted text-sm">7 дней полного доступа бесплатно</p>
+        </div>
+
+        <div class="register-benefits">
+            <div class="register-benefit"><span>✓</span><span>Нейро-карточка</span></div>
+            <div class="register-benefit"><span>✓</span><span>FAQ-генератор</span></div>
+            <div class="register-benefit"><span>✓</span><span>AI-чат-бот</span></div>
+        </div>
+
+        <form method="POST" id="regForm" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="regName">Имя</label>
+                <input type="text" name="name" id="regName" class="form-input" placeholder="Ваше имя" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="regEmail">Email</label>
+                <input type="email" name="email" id="regEmail" class="form-input" placeholder="email@domain.ru" required autocomplete="email">
+                <div class="form-error" id="regEmailErr"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="regPass">Пароль</label>
+                <input type="password" name="password" id="regPass" class="form-input" placeholder="Минимум 6 символов" required autocomplete="new-password" minlength="6">
+                <div class="form-error" id="regPassErr"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="regPass2">Повторите пароль</label>
+                <input type="password" name="password2" id="regPass2" class="form-input" placeholder="Повторите пароль" required autocomplete="new-password">
+                <div class="form-error" id="regPass2Err"></div>
+            </div>
+
+            <input type="hidden" name="tariff" value="{{ request.args.get('tariff', 'trial') }}">
+
+            <button type="submit" class="btn btn-gold btn-lg w-full mt-2" id="regBtn">
+                🚀 Зарегистрироваться
+            </button>
+        </form>
+
+        <p class="text-xs text-muted text-center mt-2">
+            Регистрируясь, вы принимаете <a href="/terms" style="color:var(--neon-purple);">политику конфиденциальности</a> и <a href="/public-offer" style="color:var(--neon-purple);">оферту</a>
+        </p>
+
+        <div class="login-link">
+            Уже есть аккаунт? <a href="/login">Войти</a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var form = document.getElementById('regForm');
+    var btn = document.getElementById('regBtn');
+    var email = document.getElementById('regEmail');
+    var emailErr = document.getElementById('regEmailErr');
+    var pass = document.getElementById('regPass');
+    var passErr = document.getElementById('regPassErr');
+    var pass2 = document.getElementById('regPass2');
+    var pass2Err = document.getElementById('regPass2Err');
+
+    function valEmail(v) {
+        if (!v) { clear(email, emailErr); return true; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+            setErr(email, emailErr, 'Некорректный email');
+            return false;
+        }
+        setOk(email, emailErr);
+        return true;
+    }
+
+    function valPass() {
+        var ok = true;
+        if (pass.value && pass.value.length < 6) {
+            setErr(pass, passErr, 'Минимум 6 символов');
+            ok = false;
+        } else if (pass.value) { setOk(pass, passErr); }
+        if (pass2.value && pass.value !== pass2.value) {
+            setErr(pass2, pass2Err, 'Пароли не совпадают');
+            ok = false;
+        } else if (pass2.value) { setOk(pass2, pass2Err); }
+        return ok;
+    }
+
+    function setErr(el, errEl, msg) {
+        errEl.textContent = msg;
+        errEl.classList.add('visible');
+        el.classList.add('error');
+        el.classList.remove('success');
+    }
+    function setOk(el, errEl) {
+        errEl.textContent = '';
+        errEl.classList.remove('visible');
+        el.classList.remove('error');
+        el.classList.add('success');
+    }
+    function clear(el, errEl) {
+        errEl.textContent = '';
+        errEl.classList.remove('visible');
+        el.classList.remove('error', 'success');
+    }
+
+    email.addEventListener('input', function() { valEmail(email.value); });
+    email.addEventListener('blur', function() { valEmail(email.value); });
+    pass.addEventListener('input', valPass);
+    pass2.addEventListener('input', valPass);
+
+    form.addEventListener('submit', function(e) {
+        var emailOk = valEmail(email.value);
+        var passOk = valPass();
+        if (!emailOk || !passOk) { e.preventDefault(); return; }
+        if (btn.disabled) { e.preventDefault(); return; }
+        btn.disabled = true;
+        btn.textContent = 'Регистрация...';
+    });
+})();
+</script>
+{% endblock %}

@@ -1,244 +1,256 @@
 {% extends "base.html" %}
 {% block title %}{{ site.domain }} — Нейровизор{% endblock %}
 {% block content %}
-<div class="nav">
-    <a href="/dashboard" class="nav-brand"><span class="logo-neuro">НЕЙРО</span><span class="logo-vizor">ВИЗОР</span></a>
-    <div class="nav-links">
-        <a href="/dashboard" class="nav-link">Дашборд</a>
-        <a href="/dashboard/sites/new" class="nav-link">+ Добавить сайт</a>
-        <a href="/logout" class="nav-link btn-danger">Выйти</a>
-    </div>
-</div>
-
-<!-- Заголовок -->
-<div class="mb-2">
-    <h1 style="font-size:1.5rem; margin-bottom:0;">{{ site.domain or site.url }}</h1>
-    <p class="text-muted text-sm">{{ site.site_type or 'general' }}</p>
-</div>
-
-<!-- Нейро-панель с тарифом -->
-{% set site_tariff = site.tariff or 'trial' %}
-{% if site.neuro_card_url and site.neuro_card_active %}
-<a href="{{ site.neuro_card_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-    <div class="neuro-panel active">
-        <div class="neuro-btn">НЕЙРО-КАРТОЧКА</div>
-        <div class="neuro-status on">
-            <span class="tariff-label">Ваш тариф</span>
-            <span class="tariff-name-gem">
-                {% if site_tariff == 'lite' %}⚡ Lite
-                {% elif site_tariff == 'basic' %}🔮 Базовый
-                {% elif site_tariff == 'pro2' %}🤖 2.0
-                {% elif site_tariff == 'pro' %}👑 PRO
-                {% elif site_tariff == 'business' %}🚀 BUSINESS
-                {% else %}💎 Пробный{% endif %}
-            </span>
-        </div>
-    </div>
-</a>
-{% else %}
-<div class="neuro-panel inactive">
-    <div class="neuro-btn off">НЕЙРО-КАРТОЧКА</div>
-    <div class="neuro-status off">НЕ АКТИВНА</div>
-</div>
-{% endif %}
-
-
-
 <style>
-.tariff-badge-card {
-    background: linear-gradient(135deg, #0a0a1a, #0d0d2b);
-    border: 1px solid rgba(120,100,255,0.15);
-    border-radius: 12px; padding: 20px; text-align: center;
-    margin-bottom: 12px; position: relative; overflow: hidden;
-}
-.tariff-badge-card.active {
-    border: 1px solid transparent;
-    border-image: linear-gradient(135deg, #c084fc, #00ff88, #c084fc) 1;
-    animation: gemGlow 3s ease-in-out infinite;
-}
-.tariff-gem {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 6px;
-}
-.gem-icon {
-    font-size: 1.5rem;
-    animation: gemSpin 4s linear infinite;
-    display: inline-block;
-}
-.gem-name {
-    font-weight: 700; font-size: 0.85rem;
-    background: linear-gradient(135deg, #c084fc, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.tariff-gem-price {
-    font-size: 1.3rem; font-weight: 900;
-    font-family: 'JetBrains Mono', monospace;
-    background: linear-gradient(135deg, #c084fc, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-}
-.tariff-gem-price span {
-    font-size: 0.65rem; color: #6b7280;
-    -webkit-text-fill-color: #6b7280;
-}
-.tariff-upgrade-btn {
-    font-size: 0.7rem; padding: 6px 12px;
-}
-@keyframes gemGlow {
-    0%, 100% { box-shadow: 0 0 15px rgba(192,132,252,0.3), 0 0 30px rgba(0,255,136,0.1); }
-    50% { box-shadow: 0 0 30px rgba(192,132,252,0.6), 0 0 60px rgba(0,255,136,0.3); }
-}
-@keyframes gemSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
+    .site-header { margin-bottom: 24px; }
+    .site-header h1 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; word-break: break-all; }
     .neuro-panel {
         display: flex;
-        border-radius: 8px;
+        border-radius: var(--radius-md);
         overflow: hidden;
-        margin-bottom: 12px;
+        margin-bottom: 24px;
         font-family: var(--font-mono);
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         letter-spacing: 1px;
         cursor: pointer;
         transition: all 0.2s ease;
+        text-decoration: none;
+        border: 1px solid transparent;
     }
     .neuro-panel.active {
-        border: 1px solid transparent;
         border-image: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee) 1;
-        animation: policePulse 2s ease-in-out infinite;
+        animation: policePulse 2.5s ease-in-out infinite;
     }
     .neuro-panel.inactive {
-        border: 1px solid rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.05);
         cursor: not-allowed;
+    }
+    @keyframes policePulse {
+        0%, 100% { box-shadow: 0 0 12px rgba(124,58,237,0.2); }
+        50% { box-shadow: 0 0 24px rgba(124,58,237,0.5), 0 0 48px rgba(34,211,238,0.15); }
     }
     .neuro-btn {
         flex: 2;
-        padding: 14px 20px;
+        padding: 16px 24px;
         text-align: center;
         background: linear-gradient(90deg, #c084fc, #a78bfa, #6366f1, #22d3ee);
         background-size: 300% 100%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        animation: shimmer 3s ease infinite;
     }
+    @keyframes shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
     .neuro-btn.off {
-        background: rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.04);
         -webkit-background-clip: text;
         -webkit-text-fill-color: #555;
     }
     .neuro-status {
         flex: 1;
-        padding: 14px 16px;
+        padding: 16px;
         text-align: center;
         font-size: 0.75rem;
-    }
-    .neuro-status.on {
-        background: rgba(0,0,0,0.2);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
+        gap: 4px;
     }
+    .neuro-status.on { background: rgba(0,0,0,0.2); }
+    .neuro-status.off { background: rgba(255,255,255,0.02); color: #555; }
     .tariff-label {
         font-size: 0.55rem;
         text-transform: uppercase;
         letter-spacing: 1.5px;
-        color: #6b7280;
-        font-weight: 400;
+        color: var(--text-dim);
     }
     .tariff-name-gem {
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #c084fc, #00ff88);
+        background: linear-gradient(135deg, #c084fc, #22d3ee);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        letter-spacing: 0.5px;
     }
-    
-    .faq-hidden { display: none; }
-    .neuro-status.off {
-        background: rgba(255,255,255,0.03);
-        color: #555;
+
+    .site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .site-section { padding: 20px; }
+    .site-section h3 {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--neon-purple);
+        margin-bottom: 12px;
     }
-    @keyframes policePulse {
-        0%, 100% { box-shadow: 0 0 10px rgba(124,58,237,0.2); }
-        50% { box-shadow: 0 0 20px rgba(124,58,237,0.4), 0 0 40px rgba(34,211,238,0.1); }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-dim);
+        font-size: 0.82rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-lbl { color: var(--text-muted); }
+    .info-val { color: var(--text-bright); font-family: var(--font-mono); }
+
+    .faq-item-compact {
+        border: 1px solid var(--border-dim);
+        border-radius: var(--radius-sm);
+        margin-bottom: 4px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: var(--transition-fast);
+    }
+    .faq-item-compact:hover { border-color: var(--border-glow); }
+    .faq-q-compact {
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        font-weight: 600;
+        min-height: 44px;
+        gap: 8px;
+    }
+    .faq-q-compact span:last-child { color: var(--neon-purple); font-size: 1rem; }
+    .faq-item-compact.open .faq-q-compact span:last-child { transform: rotate(45deg); }
+    .faq-a-compact {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        padding: 0 14px;
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+    .faq-item-compact.open .faq-a-compact { max-height: 150px; padding: 0 14px 10px; }
+
+    .widget-code {
+        background: rgba(0,0,0,0.5);
+        padding: 14px;
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--neon-cyan);
+        word-break: break-all;
+        margin-bottom: 10px;
+        border: 1px solid var(--border-dim);
+    }
+    .danger-zone {
+        border-color: rgba(248,113,113,0.2) !important;
+    }
+
+    @media (max-width: 768px) {
+        .site-grid { grid-template-columns: 1fr; }
+        .neuro-panel { flex-direction: column; }
     }
 </style>
 
-<div class="grid-2">
-    <div>
-        <div class="card mb-1">
-            <div class="flex-between mb-1">
-                <h2 style="font-size:1rem; margin-bottom:0;">FAQ</h2>
-                <span class="text-muted text-sm">{{ site.faq_count | default(0) }} шт.</span>
-            </div>
-            
-            {% if site.faq_list %}
-                <div id="faqContainer">
-                {% for item in site.faq_list %}
-                <div class="faq-item {% if loop.index > 4 %}faq-hidden{% endif %}"  onclick="this.classList.toggle('open')">
-                    <div class="faq-q" style="padding:8px 12px; font-size:0.8rem;">{{ item.q | e }} <span>▾</span></div>
-                    <div class="faq-a">{{ item.a | e | replace("
-", "<br>"|safe) }}</div>
-                </div>
-                {% endfor %}
-                </div>
-                {% if site.faq_list|length > 4 %}
-                <button class="btn btn-ghost text-sm w-full mt-1" onclick="toggleAllFaq()" id="faqToggleBtn">Показать ещё {{ site.faq_list|length - 4 }} ↓</button>
-                {% endif %}
-                <script>
-                    (function() {
-                        var faqExpanded = false;
-                        window.toggleAllFaq = function() {
-                            faqExpanded = !faqExpanded;
-                            document.querySelectorAll('.faq-hidden').forEach(function(el) {
-                                el.style.display = faqExpanded ? 'block' : 'none';
-                            });
-                            document.getElementById('faqToggleBtn').innerHTML = faqExpanded ? 'Скрыть ↑' : 'Показать ещё {{ site.faq_list|length - 4 }} ↓';
-                        };
-                    })();
-                </script>
-            {% else %}
-                <p class="text-muted text-sm">Ещё не сгенерирован</p>
-            {% endif %}
-        </div>
+<div class="container" style="padding-top:20px;">
+    <!-- Хлебные крошки -->
+    <nav style="margin-bottom:12px;font-size:0.72rem;font-family:var(--font-mono);color:var(--text-dim);" aria-label="Breadcrumb">
+        <a href="/dashboard" style="color:var(--text-muted);text-decoration:none;">← Дашборд</a>
+        <span> / </span>
+        <span style="color:var(--neon-purple);">{{ site.domain or site.url }}</span>
+    </nav>
 
-        <div class="card mb-1">
-            <h2 style="font-size:1rem; margin-bottom:8px;">Виджет</h2>
-            <code style="display:block;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;font-size:0.7rem;color:var(--neon);">&lt;script src="https://нейровизор.рф/widget.js?id={{ site.id }}"&gt;&lt;/script&gt;</code>
-            <button class="btn btn-ghost text-sm mt-1 w-full" data-script="<script src='https://нейровизор.рф/widget.js?id={{ site.id | e }}'></script>" onclick="navigator.clipboard.writeText(this.dataset.script)">Скопировать</button>
-        </div>
+    <!-- Заголовок -->
+    <div class="site-header">
+        <h1>{{ site.domain or site.url }}</h1>
+        <p class="text-muted text-sm">{{ site.site_type or 'general' }}</p>
     </div>
 
-    <div>
-        <div class="card mb-1">
-            <h2 style="font-size:1rem; margin-bottom:8px;">Статус</h2>
-            <div class="flex-between" style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-                <span class="text-muted text-sm">Тип</span>
-                <span class="text-sm">{{ site.site_type or 'general' }}</span>
+    <!-- Нейро-панель -->
+    {% set tariff = site.tariff or 'trial' %}
+    {% if site.neuro_card_url and site.neuro_card_active %}
+    <a href="{{ site.neuro_card_url }}" target="_blank" rel="noopener noreferrer" class="neuro-panel active">
+        <div class="neuro-btn">НЕЙРО-КАРТОЧКА АКТИВНА</div>
+        <div class="neuro-status on">
+            <span class="tariff-label">Тариф</span>
+            <span class="tariff-name-gem">
+                {% if tariff == 'lite' %}⚡ Lite
+                {% elif tariff == 'basic' %}🔮 Базовый
+                {% elif tariff == 'pro2' %}🤖 2.0
+                {% elif tariff == 'pro' %}👑 PRO
+                {% elif tariff == 'business' %}🚀 BUSINESS
+                {% else %}💎 Пробный{% endif %}
+            </span>
+        </div>
+    </a>
+    {% else %}
+    <div class="neuro-panel inactive">
+        <div class="neuro-btn off">НЕЙРО-КАРТОЧКА</div>
+        <div class="neuro-status off">НЕ АКТИВНА</div>
+    </div>
+    {% endif %}
+
+    <!-- Основная сетка -->
+    <div class="site-grid">
+        <!-- Левая колонка -->
+        <div>
+            <div class="card site-section">
+                <h3>FAQ ({{ site.faq_count | default(0) }})</h3>
+                {% if site.faq_list %}
+                    {% for item in site.faq_list[:10] %}
+                    <div class="faq-item-compact {% if loop.index > 4 %}faq-hidden{% endif %}" onclick="this.classList.toggle('open')">
+                        <div class="faq-q-compact"><span>{{ item.q | e }}</span><span>+</span></div>
+                        <div class="faq-a-compact">{{ item.a | e }}</div>
+                    </div>
+                    {% endfor %}
+                    {% if site.faq_list|length > 4 %}
+                    <button class="btn btn-ghost btn-sm w-full mt-1" onclick="toggleFaq(this)" id="faqBtn">Показать ещё {{ site.faq_list|length - 4 }} ↓</button>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted text-sm">FAQ ещё не сгенерирован</p>
+                {% endif %}
             </div>
-            <div class="flex-between" style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-                <span class="text-muted text-sm">FAQ</span>
-                <span class="text-sm">{{ site.faq_count | default(0) }} шт.</span>
-            </div>
-            <div class="flex-between" style="padding:4px 0;">
-                <span class="text-muted text-sm">Добавлен</span>
-                <span class="text-sm">{{ site.created_at[:10] if site.created_at else '?' }}</span>
+
+            <div class="card site-section mt-2">
+                <h3>Виджет</h3>
+                <div class="widget-code">&lt;script src="https://нейровизор.рф/widget.js?id={{ site.id }}"&gt;&lt;/script&gt;</div>
+                <button class="btn btn-outline btn-sm w-full" onclick="copyWidget(this)" data-code="&lt;script src='https://нейровизор.рф/widget.js?id={{ site.id }}'&gt;&lt;/script&gt;">📋 Скопировать</button>
             </div>
         </div>
 
-        <div class="card mb-1" style="border-color: rgba(248,113,113,0.2);">
-            <form method="POST" action="/dashboard/sites/{{ site.id }}/delete" data-domain="{{ site.domain | e }}" onsubmit="return confirm('Удалить сайт ' + this.dataset.domain + '?');">
-                <button type="submit" class="btn btn-danger w-full" style="padding:8px 16px; font-size:0.75rem;">Удалить сайт</button>
-            </form>
+        <!-- Правая колонка -->
+        <div>
+            <div class="card site-section">
+                <h3>Статус</h3>
+                <div class="info-row"><span class="info-lbl">Тип</span><span class="info-val">{{ site.site_type or 'general' }}</span></div>
+                <div class="info-row"><span class="info-lbl">FAQ</span><span class="info-val">{{ site.faq_count | default(0) }} шт.</span></div>
+                <div class="info-row"><span class="info-lbl">Добавлен</span><span class="info-val">{{ site.created_at[:10] if site.created_at else '?' }}</span></div>
+                <div class="info-row"><span class="info-lbl">Тариф</span><span class="info-val">{{ tariff | upper }}</span></div>
+            </div>
+
+            <div class="card site-section danger-zone mt-2">
+                <h3 style="color:var(--danger);">Опасная зона</h3>
+                <form method="POST" action="/dashboard/sites/{{ site.id }}/delete" onsubmit="if(!confirm('Удалить сайт навсегда?'))return false;this.querySelector('button').disabled=true;this.querySelector('button').textContent='Удаление...';">
+                    <button type="submit" class="btn btn-danger btn-sm w-full">🗑 Удалить сайт</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+{% if site.faq_list and site.faq_list|length > 4 %}
+var faqExpanded = false;
+function toggleFaq(btn) {
+    faqExpanded = !faqExpanded;
+    document.querySelectorAll('.faq-hidden').forEach(function(el) {
+        el.style.display = faqExpanded ? 'block' : 'none';
+    });
+    btn.textContent = faqExpanded ? 'Скрыть ↑' : 'Показать ещё {{ site.faq_list|length - 4 }} ↓';
+}
+{% endif %}
+
+function copyWidget(btn) {
+    navigator.clipboard.writeText(btn.dataset.code).then(function() {
+        showToast('✓ Код скопирован!');
+    });
+}
+</script>
 {% endblock %}
