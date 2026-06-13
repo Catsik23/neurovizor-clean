@@ -13,7 +13,7 @@ def _get_model():
     global _model
     if _model is None:
         from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer('/opt/neurovizor/models/e5-small')
+        _model = SentenceTransformer('/opt/neurovizor/models/e5-small', trust_remote_code=True)
         # Холостой прогрев
         _model.encode("warmup", normalize_embeddings=True)
         log_event("info", "embeddings_model_loaded")

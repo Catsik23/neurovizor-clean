@@ -29,7 +29,7 @@ def detect_site_type(text):
     if any(w in t for w in ['меню','ресторан','блюд','кафе']): return 'food'
     return 'general'
 
-def chunk_text(text, source_url='', chunk_size=150, overlap=30):
+def chunk_text(text, source_url='', chunk_size=300, overlap=50):
     """Разбивает текст на чанки с перекрытием. Возвращает список словарей."""
     if not text or not text.strip():
         return []

@@ -603,6 +603,20 @@
             <p class="text-sm" id="scoreMsg"></p>
             <p class="text-sm" style="color:var(--danger);" id="lossMsg"></p>
             <div id="scanFaq" style="margin-top:16px;"></div>
+            <div id="demoBot" style="margin-top:20px;display:none;">
+                <p class="text-sm text-muted mb-1">🤖 Попробуйте бота на своём сайте:</p>
+                <div class="demo-bot-container" style="border:1px solid var(--border-dim);border-radius:12px;overflow:hidden;background:var(--bg-card);">
+                    <div class="demo-bot-header" style="padding:10px 14px;border-bottom:1px solid var(--border-dim);font-family:var(--font-mono);font-size:0.75rem;color:var(--neon-purple);font-weight:700;">🤖 ИИ-консультант сайта</div>
+                    <div class="demo-bot-body" id="demoBotBody" style="padding:12px;max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+                        <div class="chat-msg-bot">Привет! Задайте вопрос о сайте.</div>
+                    </div>
+                    <div style="display:flex;padding:8px;border-top:1px solid var(--border-dim);gap:6px;">
+                        <input type="text" id="demoBotInput" placeholder="Задайте вопрос..." style="flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--border-dim);border-radius:6px;padding:8px 12px;color:var(--text-bright);font-family:var(--font-mono);font-size:0.75rem;outline:none;" onkeypress="if(event.key==='Enter')sendDemoMsg()">
+                        <button onclick="sendDemoMsg()" class="btn btn-primary btn-sm" style="min-height:36px;">→</button>
+                    </div>
+                </div>
+                <p class="text-xs text-muted mt-1" id="demoBotCounter">Осталось: 5 вопросов</p>
+            </div>
             <div style="margin-top:20px;">
                 <a href="/register" class="btn btn-gold">Исправить — 7 дней бесплатно</a>
             </div>
@@ -798,84 +812,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ==================== SCANNER JS ==================== -->
 <script>
 document.getElementById('scanForm').addEventListener('submit', async function(e) {
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var particles = [];
-    var w, h;
-    var waveActive = false;
-    var waveTimer = null;
-
-    function resize() {
-        w = canvas.width = canvas.offsetWidth || window.innerWidth;
-        h = canvas.height = canvas.offsetHeight || 400;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function createWave() {
-        particles = [];
-        var count = 30;
-        for (var i = 0; i < count; i++) {
-            particles.push({
-                x: -20 - i * 8,
-                y: h / 2 + (Math.random() - 0.5) * h * 0.5,
-                vy: (Math.random() - 0.5) * 1.5,
-                vx: 2.5 + Math.random() * 2,
-                life: 1,
-                decay: 0.008 + Math.random() * 0.015,
-                size: 1.5 + Math.random() * 3,
-                hue: Math.random() < 0.5 ? 260 + Math.random() * 40 : 170 + Math.random() * 30
-            });
-        }
-        waveActive = true;
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, w, h);
-        if (!waveActive) {
-            requestAnimationFrame(draw);
-            return;
-        }
-        var allDead = true;
-        particles.forEach(function(p) {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= p.decay;
-            if (p.life <= 0) return;
-            allDead = false;
-            var alpha = p.life * 0.7;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = 'hsla(' + p.hue + ', 80%, 70%, ' + alpha + ')';
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'hsla(' + p.hue + ', 80%, 70%, ' + (alpha * 0.2) + ')';
-            ctx.fill();
-        });
-        if (allDead) {
-            waveActive = false;
-        }
-        requestAnimationFrame(draw);
-    }
-
-    // Запускаем волну каждые 6 секунд
-    function scheduleWave() {
-        waveTimer = setTimeout(function() {
-            createWave();
-            scheduleWave();
-        }, 6000);
-    }
-    createWave();
-    scheduleWave();
-
-    draw();
-})();
-</script>
-
-<!-- ==================== SCANNER JS ==================== -->
-<script>
-document.getElementById('scanForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     var url = document.getElementById('scanUrl').value.trim();
     if (!url) return;
@@ -919,10 +855,19 @@ document.getElementById('scanForm').addEventListener('submit', async function(e)
                 loss.style.display = 'block';
             } else { loss.style.display = 'none'; }
 
+            var allFaq = d.faq || [];
             var faqHtml = '';
-            (d.faq || []).slice(0,3).forEach(function(f) {
+            allFaq.slice(0,3).forEach(function(f) {
                 faqHtml += '<div class="faq-item-fancy" onclick="this.classList.toggle(\'open\')"><div class="faq-q-fancy"><span>'+escapeHtml(f.q)+'</span><span>+</span></div><div class="faq-a-fancy">'+escapeHtml(f.a)+'</div></div>';
             });
+            if (allFaq.length > 3) {
+                faqHtml += '<div id="moreFaq" style="display:none;">';
+                allFaq.slice(3).forEach(function(f) {
+                    faqHtml += '<div class="faq-item-fancy" onclick="this.classList.toggle(\'open\')"><div class="faq-q-fancy"><span>'+escapeHtml(f.q)+'</span><span>+</span></div><div class="faq-a-fancy">'+escapeHtml(f.a)+'</div></div>';
+                });
+                faqHtml += '</div>';
+                faqHtml += '<button class="btn btn-outline btn-sm w-full mt-1" id="showMoreBtn" onclick="var m=document.getElementById(\'moreFaq\');var b=document.getElementById(\'showMoreBtn\');if(m.style.display===\'none\'){m.style.display=\'block\';b.textContent=\'Скрыть ↑\'}else{m.style.display=\'none\';b.textContent=\'Показать ещё ' + (allFaq.length-3) + ' ↓\'}">Показать ещё ' + (allFaq.length-3) + ' ↓</button>';
+            }
             document.getElementById('scanFaq').innerHTML = faqHtml ? '<p class="text-sm text-muted mb-1">Сгенерированные FAQ:</p>'+faqHtml : '';
         }
     } catch(err) {
@@ -932,7 +877,52 @@ document.getElementById('scanForm').addEventListener('submit', async function(e)
     }
     btn.disabled = false;
     btn.textContent = orig;
+    
+    // Показываем демо-бота если есть site_id
+    if (d.success && d.site_id) {
+        currentSiteId = d.site_id;
+        currentDomain = d.domain;
+        document.getElementById('demoBot').style.display = 'block';
+        demoQuestionsLeft = 5;
+        document.getElementById('demoBotCounter').textContent = 'Осталось: 5 вопросов';
+    }
 });
+
+// Демо-бот
+var demoQuestionsLeft = 0;
+var currentDomain = '';
+
+function sendDemoMsg() {
+    var input = document.getElementById('demoBotInput');
+    var body = document.getElementById('demoBotBody');
+    var msg = input.value.trim();
+    if (!msg || demoQuestionsLeft <= 0) return;
+    
+    body.innerHTML += '<div class="chat-msg-user" style="align-self:flex-end;background:var(--gradient-hero);color:#fff;padding:6px 12px;border-radius:12px 12px 4px 12px;max-width:80%;font-size:0.75rem;">' + escapeHtml(msg) + '</div>';
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+    demoQuestionsLeft--;
+    document.getElementById('demoBotCounter').textContent = 'Осталось: ' + demoQuestionsLeft + ' вопросов';
+    
+    if (demoQuestionsLeft <= 0) {
+        document.getElementById('demoBotInput').disabled = true;
+        document.getElementById('demoBotCounter').textContent = 'Лимит исчерпан. Зарегистрируйтесь для полного доступа.';
+    }
+    
+    fetch('/bot/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: msg, domain: currentDomain, site_id: currentSiteId})
+    })
+    .then(r => r.json())
+    .then(function(d) {
+        body.innerHTML += '<div class="chat-msg-bot" style="align-self:flex-start;background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.15);padding:6px 12px;border-radius:12px 12px 12px 4px;max-width:80%;font-size:0.75rem;">' + escapeHtml(d.answer || '...') + '</div>';
+        body.scrollTop = body.scrollHeight;
+    })
+    .catch(function() {
+        body.innerHTML += '<div class="chat-msg-bot" style="color:var(--danger);font-size:0.75rem;">Ошибка.</div>';
+    });
+}
 
 function escapeHtml(s) {
     var d = document.createElement('div');

@@ -18,7 +18,7 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (compatible; NeurovizorBot/1.0; +https://neurovizor.ru)'
 }
 
-def parse_url(url: str) -> dict:
+def parse_url(url: str, base_domain: str = None) -> dict:
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15, allow_redirects=True)
         resp.raise_for_status()
@@ -29,6 +29,20 @@ def parse_url(url: str) -> dict:
 
     soup = BeautifulSoup(resp.text, 'html.parser')
 
+    # Собираем внутренние ссылки с текстом
+    internal_links = []
+    if base_domain:
+        from urllib.parse import urljoin
+        for a in soup.find_all('a', href=True):
+            href = a.get('href', '').strip()
+            text = a.get_text(strip=True)[:80]
+            if not href or not text:
+                continue
+            full_url = urljoin(url, href)
+            # Только внутренние ссылки
+            if base_domain in full_url and full_url not in [l['url'] for l in internal_links]:
+                internal_links.append({'url': full_url, 'title': text})
+    
     for tag in soup(['script', 'style', 'nav', 'footer', 'header']):
         tag.decompose()
 
@@ -47,79 +61,130 @@ def parse_url(url: str) -> dict:
         "title": title,
         "description": description,
         "text": text,
-        "html": resp.text
+        "html": resp.text,
+        "internal_links": internal_links
     }
 
+
+def get_base_domain(url: str) -> str:
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def crawl_site(url: str, max_pages: int = 10) -> list:
+    """
+    Глубокий парсинг: главная + все внутренние страницы (до max_pages).
+    Возвращает список словарей parse_url.
+    """
+    base_domain = get_base_domain(url)
+    pages = []
+    visited = set()
+    from collections import deque
+    queue = deque([url])
+    
+    while queue and len(pages) < max_pages:
+        current_url = queue.popleft()
+        if current_url in visited:
+            continue
+        visited.add(current_url)
+        
+        try:
+            page_data = parse_url(current_url, base_domain)
+            pages.append(page_data)
+            
+            # Добавляем новые ссылки в очередь
+            for link in page_data.get('internal_links', []):
+                if link['url'] not in visited and link['url'] not in queue:
+                    queue.append(link['url'])
+        except Exception as e:
+            log_event("warning", "crawl_page_failed", url=current_url, error=str(e))
+            continue
+    
+    return pages
+
 def index_site(site_id: str, url: str, user_id: str):
-    log_event("info", "index_site_started", site_id=site_id, url=url)
+    log_event("index_site_started", site_id=site_id, url=url)
+    print(f">>> INDEX_START {site_id} {url}", flush=True)
 
     try:
         supabase = get_supabase()
 
-        supabase.table("sites").update({
-            "indexing_status": "in_progress",
-            "updated_at": datetime.utcnow().isoformat()
-        }).eq("id", site_id).execute()
+        # Обновляем статус только для реальных сайтов
+        if not str(site_id).startswith('demo-'):
+            supabase.table("sites").update({
+                "updated_at": datetime.utcnow().isoformat()
+            }).eq("id", site_id).execute()
 
-        page_data = parse_url(url)
-        audit_result = ai_visibility_audit(page_data["text"], page_data["html"])
-        site_type = detect_site_type(page_data["text"])
-        entities = extract_entities(page_data["text"])
+        # Глубокий парсинг: все страницы сайта
+        pages = crawl_site(url, max_pages=15)
+        print(f">>> CRAWLED {len(pages)} pages", flush=True)
+        log_event("crawl_completed", site_id=site_id, pages_count=len(pages))
+        print(f">>> AUDIT START", flush=True)
+        
+        # Объединяем текст со всех страниц
+        all_text = ' '.join([p['text'] for p in pages])
+        main_page = pages[0] if pages else parse_url(url)
+        
+        audit_result = ai_visibility_audit(all_text, main_page.get("html", ""))
+        site_type = detect_site_type(all_text)
+        print(f">>> AUDIT DONE, type={site_type}", flush=True)
 
-        if isinstance(entities, list):
-            for entity in entities:
-                try:
-                    supabase.table("extracted_entities").upsert({
-                        "site_id": site_id,
-                        "entity_type": entity.get("type", "unknown"),
-                        "entity_value": entity.get("value", ""),
-                        "source_url": url,
-                        "created_at": datetime.utcnow().isoformat()
-                    }).execute()
-                except Exception as e:
-                    log_event("warning", "entity_save_failed", entity=str(entity)[:100], error=str(e))
-        elif isinstance(entities, dict):
-            for entity_type, entity_list in entities.items():
-                for entity_value in entity_list:
-                    try:
-                        supabase.table("extracted_entities").upsert({
-                            "site_id": site_id,
-                            "entity_type": entity_type,
-                            "entity_value": entity_value,
-                            "source_url": url,
-                            "created_at": datetime.utcnow().isoformat()
-                        }).execute()
-                    except Exception as e:
-                        log_event("warning", "entity_save_failed", entity=entity_value, error=str(e))
-
-        chunks = chunk_text(page_data["text"])
-        log_event("info", "chunks_created", site_id=site_id, chunk_count=len(chunks))
-
-        # Удаляем старые чанки и сохраняем новые
-        supabase.table("knowledge_chunks").delete().eq("site_id", site_id).execute()
+        # Удаляем старые чанки
+        print(f">>> DELETING old chunks...", flush=True)
+        import requests as _req
+        import os as _os
+        _del_headers = {
+            "apikey": _os.environ.get("SUPABASE_KEY", ""),
+            "Authorization": "Bearer " + _os.environ.get("SUPABASE_KEY", "")
+        }
+        _req.delete(
+            f"{_os.environ.get('SUPABASE_URL', '')}/rest/v1/knowledge_chunks?site_id=eq.{site_id}",
+            headers=_del_headers, timeout=10
+        )
+        print(f">>> DELETED", flush=True)
 
         saved_count = 0
-        for chunk in chunks:
-            try:
-                embedding = embed_document(chunk["text"])
-                supabase.table("knowledge_chunks").insert({
-                    "site_id": site_id,
-                    "chunk_text": chunk["text"],
-                    "chunk_type": chunk.get("chunk_type", "paragraph"),
-                    "chunk_position": chunk.get("position", 0),
-                    "embedding": embedding,
-                    "created_at": datetime.utcnow().isoformat()
-                }).execute()
-                saved_count += 1
-            except Exception as e:
-                log_event("warning", "chunk_save_failed", site_id=site_id, error=str(e))
+        # Чанкуем каждую страницу отдельно, сохраняем source_url
+        for page in pages:
+            chunks = chunk_text(page["text"], source_url=page.get("url", ""))
+            print(f">>> PAGE {page["url"]}: {len(chunks)} chunks", flush=True)
+            for chunk in chunks:
+                try:
+                    embedding = embed_document(chunk["text"])
+                    print(f">>> INSERTING chunk {chunk.get("chunk_type","?")}", flush=True)
+                    import requests as _req
+                    import os as _os
+                    _payload = {
+                        "site_id": site_id,
+                        "chunk_text": chunk["text"][:5000],
+                        "chunk_type": chunk.get("chunk_type", "paragraph"),
+                        "chunk_position": chunk.get("position", 0),
+                        "source_url": page["url"],
+                        "embedding": embedding
+                    }
+                    _headers = {
+                        "apikey": _os.environ.get("SUPABASE_KEY", ""),
+                        "Authorization": "Bearer " + _os.environ.get("SUPABASE_KEY", ""),
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    }
+                    _url = _os.environ.get("SUPABASE_URL", "") + "/rest/v1/knowledge_chunks"
+                    _resp = _req.post(_url, json=_payload, headers=_headers, timeout=10)
+                    if _resp.status_code == 201:
+                        saved_count += 1
+                    else:
+                        log_event("warning", "chunk_save_failed", site_id=site_id, status=_resp.status_code)
+                    saved_count += 1
+                except Exception as e:
+                    log_event("warning", "chunk_save_failed", site_id=site_id, error=str(e))
 
         supabase.table("sites").update({
-            "indexing_status": "completed",
             "ai_visibility_score": audit_result.get("score", 0),
             "site_type": site_type,
             "faq_count": saved_count,
-            "parsed_content": page_data["text"][:50000],
+            "parsed_content": all_text[:100000],
+            "pages_count": len(pages),
             "indexed_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", site_id).execute()
@@ -128,10 +193,9 @@ def index_site(site_id: str, url: str, user_id: str):
                  chunk_count=saved_count, score=audit_result.get("score"))
 
     except Exception as e:
-        log_event("error", "index_site_failed", site_id=site_id, error=str(e))
+        log_event("index_site_failed", site_id=site_id, error=str(e))
         try:
             supabase.table("sites").update({
-                "indexing_status": "failed",
                 "indexing_error": str(e)[:500],
                 "updated_at": datetime.utcnow().isoformat()
             }).eq("id", site_id).execute()

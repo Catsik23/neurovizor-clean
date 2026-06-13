@@ -62,77 +62,24 @@ def demo():
         return jsonify(result)
 
     audit = ai_visibility_audit(result['text'], result.get('html', ''))
+    
+    # Генерация FAQ: базовая (10 шт) + расширенная через семантику
     faq = generate_faq(result['title'], result['text'], result['phones'], result['emails'])
+    
     filename = generate_neuro_card_static(result['domain'], result['title'], result['text'], result['phones'], result['emails'], faq, None)
 
-    # Сохраняем чанки в Supabase для векторного поиска
     demo_site_id = 'demo-' + result['domain']
-    try:
-        from shared.utils import chunk_text, classify_chunk_topic
-        from shared.supabase import get_supabase
-        
-        # Удаляем старые чанки для этого домена
-        get_supabase().table('knowledge_chunks').delete().eq('site_id', demo_site_id).execute()
-        
-        from shared.embeddings import embed_document
-        chunks = chunk_text(result['text'])
-        
-        # Шаг 1: Все эмбеддинги в памяти
-        chunk_data = []
-        for chunk in chunks:
-            try:
-                embedding = embed_document(chunk['text'])
-            except:
-                embedding = None
-            chunk_data.append({'chunk': chunk, 'embedding': embedding})
-            print('>>> EMBEDDED ' + chunk.get('chunk_type', '?'), flush=True)
-        
-        # Шаг 2: Сохраняем все чанки через прямые HTTP-запросы
-        import requests as req
-        supabase_url = os.environ.get('SUPABASE_URL', '') + '/rest/v1/knowledge_chunks'
-        supabase_key = os.environ.get('SUPABASE_KEY', '')
-        if not supabase_url.startswith('http') or not supabase_key:
-            raise ValueError('SUPABASE_URL/KEY not configured')
-        supabase_headers = {
-            'apikey': supabase_key,
-            'Authorization': 'Bearer ' + supabase_key,
-            'Content-Type': 'application/json'
-        }
-        for item in chunk_data:
-            payload = {
-                'site_id': demo_site_id,
-                'chunk_text': item['chunk']['text'],
-                'chunk_type': item['chunk'].get('chunk_type', 'paragraph'),
-                'chunk_position': item['chunk'].get('position', 0),
-                'topic': classify_chunk_topic(item['chunk']['text']),
-                'importance_score': 3 if classify_chunk_topic(item['chunk']['text']) in ('pricing', 'delivery', 'contacts') else 1,
-                'char_count': len(item['chunk']['text']),
-                'embedding': item['embedding']
-            }
-            resp = req.post(supabase_url, json=payload, headers=supabase_headers, timeout=10)
-            if resp.status_code == 201:
-                print('>>> CHUNK SAVED ' + item['chunk'].get('chunk_type', '?'), flush=True)
-            else:
-                print('>>> CHUNK FAILED ' + str(resp.status_code) + ': ' + resp.text[:100], flush=True)
-    except Exception as e:
-        print('>>> DEMO CHUNK ERROR:', str(e), flush=True)
-        log_event('demo_chunk_error', error=str(e), site_id=demo_site_id)
 
-    print('>>> COLLECTING NICHE QUERIES...', flush=True)
-    # Собираем поисковые запросы по нише
-    niche_queries = []
-    try:
-        from shared.suggest_collector import collect_niche_queries
-        niche_queries = collect_niche_queries(result.get('domain', ''), result.get('text', ''))
-        for q in niche_queries:
-            get_supabase().table('analytics').insert({
-                'site_id': demo_site_id,
-                'page': '/demo',
-                'event_type': 'search_query',
-                'ip': q[:80]
-            }).execute()
-    except Exception as e:
-        log_event('niche_queries_error', error=str(e))
+    # Индексация через краулер в фоне
+    import threading
+    def demo_index():
+        try:
+            from services.crawler.app import index_site
+            index_site(demo_site_id, result.get('url', ''), 'demo')
+        except Exception as e:
+            print('>>> DEMO INDEX ERROR:', str(e), flush=True)
+            log_event('demo_index_error', error=str(e), site_id=demo_site_id)
+    threading.Thread(target=demo_index, daemon=True).start()
 
     # Считаем количество найденных страниц
     pages_found = len(result.get('pages', []))
@@ -243,11 +190,6 @@ from shared.embeddings import embed_document
 _ = embed_document("model warmup")
 print(f">>> Model ready in {_time.time()-_t0:.1f}s", flush=True)
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-
-# Дополнительные страницы
 @app.route('/about')
 def about():
     return render_template('pages/about.html')
@@ -263,3 +205,7 @@ def terms():
 @app.route('/public-offer')
 def public_offer():
     return render_template('pages/public_offer.html')
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

@@ -6,7 +6,9 @@ import requests
 import os
 
 API_KEY = os.environ.get('YANDEX_SEARCH_API_KEY', '')
-FOLDER_ID = os.environ.get('YANDEX_FOLDER_ID', 'b1g95ptiivucd9ofj00b')
+if not API_KEY:
+    print('[WARNING] YANDEX_SEARCH_API_KEY not set — Wordstat disabled', flush=True)
+FOLDER_ID = os.environ.get('YANDEX_FOLDER_ID', '')
 WORDSTAT_URL = "https://searchapi.api.cloud.yandex.net/v2/wordstat/topRequests"
 
 def get_top_requests(phrase: str, num: int = 10) -> dict:
@@ -26,7 +28,8 @@ def get_top_requests(phrase: str, num: int = 10) -> dict:
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"[WORDSTAT ERROR] {response.status_code}: {response.text[:200]}")
+        from shared.logger import log_event
+        log_event("wordstat_api_error", status=response.status_code, body=response.text[:200])
         return {"results": []}
 
 

@@ -635,7 +635,11 @@
             max-width: 80%;
             font-size: 0.8rem;
         }
-        .chat-msg-bot {
+        .chat-msg-bot ul { margin: 4px 0; padding-left: 18px; }
+.chat-msg-bot li { margin: 2px 0; }
+.chat-msg-bot b { color: var(--neon-purple); }
+.chat-msg-bot a { color: var(--neon-cyan); text-decoration: underline; }
+.chat-msg-bot {
             align-self: flex-start;
             background: rgba(192, 132, 252, 0.1);
             border: 1px solid rgba(192, 132, 252, 0.15);
@@ -774,6 +778,8 @@
             .chat-window { width: 300px; right: -10px; }
         }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script>var NV_VERSION = "3.5";</script>
 </head>
 <body>
     <a href="#main" class="skip-link">К контенту</a>
@@ -955,6 +961,7 @@
     }
 
     function sendChatMsg() {
+        console.log('sendChatMsg CALLED');
         var input = document.getElementById('chatInput');
         var body = document.getElementById('chatBody');
         var msg = input.value.trim();
@@ -970,11 +977,22 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            body.innerHTML += '<div class="chat-msg-bot">' + escapeHtml(d.answer || 'Я пока не знаю ответа.') + '</div>';
+            var raw = d.answer || 'Я пока не знаю ответа.';
+            // Убираем DOCTYPE, html, head, body — оставляем только содержимое
+            raw = raw.replace(/<!DOCTYPE[^>]*>/gi, '');
+            raw = raw.replace(/<html[^>]*>/gi, '').replace(/<\/html>/gi, '');
+            raw = raw.replace(/<head>[\s\S]*?<\/head>/gi, '');
+            raw = raw.replace(/<body[^>]*>/gi, '').replace(/<\/body>/gi, '');
+            raw = raw.replace(/<title>[\s\S]*?<\/title>/gi, '');
+            raw = raw.replace(/<meta[^>]*>/gi, '');
+            var bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (bodyMatch) { raw = bodyMatch[1]; }
+            console.log('INSERTING:', raw.substring(0, 200));
+            body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot">' + raw + '</div>');
             body.scrollTop = body.scrollHeight;
         })
         .catch(function() {
-            body.innerHTML += '<div class="chat-msg-bot" style="color:var(--danger);">Ошибка соединения.</div>';
+            body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot" style="color:var(--danger);">Ошибка соединения.</div>');
         });
     }
 
