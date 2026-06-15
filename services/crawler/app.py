@@ -151,15 +151,22 @@ def index_site(site_id: str, url: str, user_id: str):
         saved_count = 0
         noise_count = 0
         # Чанкуем каждую страницу отдельно, фильтруем шум, сохраняем source_url
+        from shared.embeddings import embed_batch
         for page in pages:
             if page_usefulness_score(page.get("text", ""), page.get("html", ""), page.get("url", "")) < 20:
                 noise_count += 1
                 continue
             chunks = chunk_text(page["text"], source_url=page.get("url", ""))
             print(f">>> PAGE {page["url"]}: {len(chunks)} chunks", flush=True)
-            for chunk in chunks:
+            # Батчевый эмбеддинг для всех чанков страницы
+            chunk_texts = [c["text"] for c in chunks]
+            try:
+                embeddings = embed_batch(chunk_texts, mode="document")
+            except:
+                embeddings = [embed_document(t) for t in chunk_texts]
+            for i, chunk in enumerate(chunks):
                 try:
-                    embedding = embed_document(chunk["text"])
+                    embedding = embeddings[i] if i < len(embeddings) else embed_document(chunk["text"])
                     print(f">>> INSERTING chunk {chunk.get("chunk_type","?")}", flush=True)
                     import requests as _req
                     import os as _os
