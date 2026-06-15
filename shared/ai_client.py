@@ -70,7 +70,7 @@ def get_relevant_chunks(site_id, question):
         if response.status_code == 200:
             data = response.json()
             if data:
-                return ' '.join([r['chunk_text'] for r in data])
+                return ' '.join([r['chunk_text'] for r in data[:3]])
     except Exception as e:
         log_event("VECTOR_SEARCH_ERROR", data={"error": str(e)})
     return ''

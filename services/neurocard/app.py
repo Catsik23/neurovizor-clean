@@ -12,11 +12,11 @@ _cache = {}
 
 # Адаптивные промпты
 PROMPTS = {
-    'shop': 'Ты — ИИ-ассистент Нейровизора, консультант интернет-магазина. Отвечай ТОЛЬКО HTML-тегами: <ul><li>списки</li></ul>, эмодзи 📦 💰, <b>цены</b>. Если есть ссылки — <a href="URL">Название раздела</a>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>, <title>, <meta>. Предлагай оформить заказ.',
-    'service': 'Ты — ИИ-ассистент Нейровизора, администратор. Отвечай ТОЛЬКО HTML-тегами: эмодзи 📅, <b>время</b>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>. Предлагай запись на услуги. Если есть ссылки — <a href="URL">Название</a>.',
-    'food': 'Ты — ИИ-ассистент Нейровизора, официант. Отвечай ТОЛЬКО HTML-тегами: эмодзи 🍽️, <ul><li>блюда с ценами</li></ul>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>. Если есть ссылки — <a href="URL">Меню</a>.',
-    'b2b': 'Ты — ИИ-ассистент Нейровизора, менеджер по продажам. Отвечай ТОЛЬКО HTML-тегами: эмодзи 💼, <b>решения</b>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>. Предлагай демо или консультацию. Если есть ссылки — <a href="URL">Название</a>.',
-    'general': 'Ты — ИИ-ассистент Нейровизора. Отвечай ТОЛЬКО HTML-тегами: эмодзи 📞, <ul><li>списки</li></ul>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>, <title>, <meta>. Если есть ссылки — <a href="URL">Название</a>. Предлагай связаться с менеджером.'
+    'shop': 'Ты — ИИ-ассистент Нейровизора, консультант интернет-магазина. Отвечай на HTML: <ul><li>списки</li></ul>, эмодзи 📦 💰, <b>цены</b>. Если в информации есть ссылки — используй их: <a href="URL">Название раздела</a>. Предлагай оформить заказ.',
+    'service': 'Ты — ИИ-ассистент Нейровизора, администратор. Отвечай на HTML: эмодзи 📅, <b>время</b>. Предлагай запись на услуги. Уточняй удобное время. Если есть ссылки — используй их.',
+    'food': 'Ты — ИИ-ассистент Нейровизора, официант. Отвечай на HTML: эмодзи 🍽️, <ul><li>блюда с ценами</li></ul>. Если есть ссылки на меню — используй их.',
+    'b2b': 'Ты — ИИ-ассистент Нейровизора, менеджер по продажам. Отвечай на HTML: эмодзи 💼, <b>решения</b>. Предлагай демо или консультацию. Если есть ссылки — используй их.',
+    'general': 'Ты — ИИ-ассистент Нейровизора. Отвечай на HTML: эмодзи 📞, <ul><li>списки</li></ul>. Если есть ссылки — <a href="URL">Название</a>. Предлагай связаться с менеджером.'
 }
 
 
@@ -83,8 +83,35 @@ def bot_chat():
     context = ''
     site_type = 'general'
 
-    # Ищем сайт и получаем релевантные чанки
+    # Пробуем определить намерение через Semantic Router
     site_id = request.json.get('site_id', '').strip()
+    from shared.semantic_router import detect_intent
+    intent = detect_intent(question)
+    if intent and intent['priority'] == 1:
+        target_url = None
+        target_name = intent.get('url_template', 'Каталог')
+        if site_id:
+            try:
+                cats = get_supabase().table('site_categories').select('url','category_name').eq('site_id', site_id).execute()
+                if cats.data:
+                    q_words = [w.strip().lower() for w in question.lower().split() if len(w) > 2]
+                    for cat in cats.data:
+                        cat_name = cat.get('category_name', '').lower()
+                        cat_url = cat.get('url', '').lower()
+                        if any(w in cat_name or w in cat_url for w in q_words):
+                            target_url = cat.get('url')
+                            target_name = cat.get('category_name', 'Каталог')
+                            break
+                    if not target_url:
+                        target_url = cats.data[0].get('url')
+                        target_name = cats.data[0].get('category_name', 'Каталог')
+            except:
+                pass
+        if not target_url:
+            target_url = f"https://{domain}/shop/" if domain else "/shop/"
+        return jsonify({'answer': f'<p>Да, у нас есть то что вы ищете! 😊</p><p>Перейдите в раздел <a href="{target_url}">{target_name}</a>.</p><p>📞 Или свяжитесь с менеджером.</p>'})
+
+    # Ищем сайт и получаем релевантные чанки
     if domain or site_id:
         try:
             # Если site_id не передан — ищем по домену в sites
@@ -128,15 +155,23 @@ def bot_chat():
         context = 'AI Visibility Optimizer — нейро-карточки для бизнеса. 499 руб/мес. Первые 7 дней бесплатно. 499₽/мес после пробного. Отменить можно в любой момент.'
 
     log_event("bot_context", site_id=site_id, context_len=len(context), context_preview=context[:200])
-    system_prompt = PROMPTS.get(site_type, PROMPTS['general']) + '\nИНФО:\n' + context[:3000]
+    log_event('bot_debug', context_len=len(context), context_preview=context[:300])
+    system_prompt = PROMPTS.get(site_type, PROMPTS['general']) + '\nИНФО:\n' + context[:2000]
 
     answer = ask_yandexgpt(question, '', system_prompt)
-    # Убираем markdown-обёртку ```html ... ```
+    # Убираем markdown и HTML-обёртки
     import re
-    answer = re.sub(r'^```(?:html)?\s*\n?', '', answer.strip())
-    answer = re.sub(r'\n?\s*```$', '', answer)
-    from flask import make_response
-    import json
-    resp = make_response(json.dumps({'answer': answer}, ensure_ascii=False))
-    resp.content_type = 'application/json; charset=utf-8'
-    return resp
+    answer = re.sub(r'```(?:html)?\s*', '', answer)
+    answer = re.sub(r'```', '', answer)
+    # Убираем полный HTML-документ если есть
+    body_match = re.search(r'<body[^>]*>(.*?)</body>', answer, re.DOTALL | re.IGNORECASE)
+    if body_match:
+        answer = body_match.group(1).strip()
+    # Убираем оставшиеся обёртки
+    answer = re.sub(r'<!DOCTYPE[^>]*>', '', answer, flags=re.IGNORECASE)
+    answer = re.sub(r'</?html[^>]*>', '', answer, flags=re.IGNORECASE)
+    answer = re.sub(r'</?head[^>]*>', '', answer, flags=re.IGNORECASE)
+    answer = re.sub(r'<title[^>]*>.*?</title>', '', answer, flags=re.IGNORECASE | re.DOTALL)
+    answer = re.sub(r'<meta[^>]*>', '', answer, flags=re.IGNORECASE)
+    answer = answer.strip()
+    return jsonify({'answer': answer})

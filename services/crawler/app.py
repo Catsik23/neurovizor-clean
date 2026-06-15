@@ -144,9 +144,15 @@ def index_site(site_id: str, url: str, user_id: str):
         )
         print(f">>> DELETED", flush=True)
 
+        from shared.utils import page_usefulness_score
         saved_count = 0
-        # Чанкуем каждую страницу отдельно, сохраняем source_url
+        noise_count = 0
+        # Чанкуем каждую страницу отдельно, фильтруем шум, сохраняем source_url
         for page in pages:
+            # Пропускаем шумовые страницы
+            if page_usefulness_score(page.get("text", ""), page.get("html", ""), page.get("url", "")) < 20:
+                noise_count += 1
+                continue
             chunks = chunk_text(page["text"], source_url=page.get("url", ""))
             print(f">>> PAGE {page["url"]}: {len(chunks)} chunks", flush=True)
             for chunk in chunks:
@@ -160,7 +166,8 @@ def index_site(site_id: str, url: str, user_id: str):
                         "chunk_text": chunk["text"][:5000],
                         "chunk_type": chunk.get("chunk_type", "paragraph"),
                         "chunk_position": chunk.get("position", 0),
-                        "source_url": page["url"],
+                        "source_url": page.get("url", ""),
+                        "source_title": page.get("title", ""),
                         "embedding": embedding
                     }
                     _headers = {
@@ -188,6 +195,27 @@ def index_site(site_id: str, url: str, user_id: str):
             "indexed_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", site_id).execute()
+
+        # Сохраняем карту категорий
+        try:
+            supabase.table("site_categories").delete().eq("site_id", site_id).execute()
+            cat_urls = {}
+            for page in pages:
+                for link in page.get('internal_links', []):
+                    url = link.get('url', '')
+                    title = link.get('title', '')[:80]
+                    if url and title and url not in cat_urls:
+                        cat_urls[url] = title
+                        supabase.table("site_categories").insert({
+                            "site_id": site_id,
+                            "category_name": title,
+                            "url": url
+                        }).execute()
+        except Exception as e:
+            print(f'>>> CATEGORIES ERROR: {e}', flush=True)
+            log_event("warning", "categories_save_failed", site_id=site_id, error=str(e))
+        else:
+            print(f'>>> CATEGORIES SAVED: {len(cat_urls)}', flush=True)
 
         log_event("info", "index_site_completed", site_id=site_id,
                  chunk_count=saved_count, score=audit_result.get("score"))

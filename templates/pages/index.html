@@ -916,11 +916,16 @@ function sendDemoMsg() {
     })
     .then(r => r.json())
     .then(function(d) {
-        body.innerHTML += '<div class="chat-msg-bot" style="align-self:flex-start;background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.15);padding:6px 12px;border-radius:12px 12px 12px 4px;max-width:80%;font-size:0.75rem;">' + escapeHtml(d.answer || '...') + '</div>';
+        var raw = d.answer || '...';
+        var clean = DOMPurify.sanitize(raw, {
+            ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'p', 'br', 'span'],
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'tel']
+        });
+        body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot">' + clean + '</div>');
         body.scrollTop = body.scrollHeight;
     })
     .catch(function() {
-        body.innerHTML += '<div class="chat-msg-bot" style="color:var(--danger);font-size:0.75rem;">Ошибка.</div>';
+        body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot" style="color:var(--danger);">Ошибка.</div>');
     });
 }
 

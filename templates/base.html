@@ -639,6 +639,15 @@
 .chat-msg-bot li { margin: 2px 0; }
 .chat-msg-bot b { color: var(--neon-purple); }
 .chat-msg-bot a { color: var(--neon-cyan); text-decoration: underline; }
+.chat-msg-bot a[href^="tel:"] { 
+    display: inline-block; 
+    background: var(--gradient-hero);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-decoration: none;
+    margin: 2px 4px;
+}
 .chat-msg-bot {
             align-self: flex-start;
             background: rgba(192, 132, 252, 0.1);
@@ -978,17 +987,11 @@
         .then(function(r) { return r.json(); })
         .then(function(d) {
             var raw = d.answer || 'Я пока не знаю ответа.';
-            // Убираем DOCTYPE, html, head, body — оставляем только содержимое
-            raw = raw.replace(/<!DOCTYPE[^>]*>/gi, '');
-            raw = raw.replace(/<html[^>]*>/gi, '').replace(/<\/html>/gi, '');
-            raw = raw.replace(/<head>[\s\S]*?<\/head>/gi, '');
-            raw = raw.replace(/<body[^>]*>/gi, '').replace(/<\/body>/gi, '');
-            raw = raw.replace(/<title>[\s\S]*?<\/title>/gi, '');
-            raw = raw.replace(/<meta[^>]*>/gi, '');
-            var bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-            if (bodyMatch) { raw = bodyMatch[1]; }
-            console.log('INSERTING:', raw.substring(0, 200));
-            body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot">' + raw + '</div>');
+            var clean = DOMPurify.sanitize(raw, {
+                ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'p', 'br', 'span'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'tel']
+            });
+            body.insertAdjacentHTML('beforeend', '<div class="chat-msg-bot">' + clean + '</div>');
             body.scrollTop = body.scrollHeight;
         })
         .catch(function() {

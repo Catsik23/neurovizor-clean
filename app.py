@@ -1,4 +1,12 @@
 from flask import Flask, render_template, request, jsonify
+from flask.json.provider import DefaultJSONProvider
+
+class NonEscapingJSONProvider(DefaultJSONProvider):
+    ensure_ascii = False
+    sort_keys = False
+    def dumps(self, obj, **kwargs):
+        import json
+        return json.dumps(obj, ensure_ascii=False, **kwargs)
 import time
 from collections import defaultdict
 import sys, os
@@ -13,7 +21,10 @@ from services.neurocard.app import neurocard_bp
 from shared.logger import log_event
 
 app = Flask(__name__)
+app.json = NonEscapingJSONProvider(app)
 app.secret_key = os.environ.get('SECRET_KEY')
+app.config['JSON_ESCAPE_FORWARD_SLASHES'] = False
+app.json.sort_keys = False
 if not app.secret_key:
     raise RuntimeError('SECRET_KEY env var is not set')
 

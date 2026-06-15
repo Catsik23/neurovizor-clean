@@ -88,3 +88,33 @@ def classify_chunk_topic(chunk):
     if any(w in t for w in ['услуга','товар','продукт']): return 'products'
     if any(w in t for w in ['компания','мы','команд']): return 'about'
     return 'general'
+
+def page_usefulness_score(text, html='', url=''):
+    """Оценка полезности страницы для навигации. 0-100."""
+    # Безусловный пропуск по URL-паттернам
+    noise_patterns = ['/blog/', '/news/', '/review/', '/testimonial/', '/interview/', '/story/', 
+                      '/responses/', '/otzyvy/', '/stories/', '/clientday/', '/simple-stories/']
+    if url:
+        url_lower = url.lower()
+        if any(p in url_lower for p in noise_patterns):
+            return 0
+    score = 0
+    t = text.lower() if text else ''
+    text_len = len(t)
+    # Цены и товарные признаки
+    if re.search(r'\d+\s*[₽руб]', t): score += 30
+    if re.search(r'купить|заказ|корзин|каталог|товар|услуг|цена|стоимост|скидк', t): score += 20
+    # Контакты
+    if re.search(r'[78]\d{10}', t): score += 15
+    if re.search(r'телефон|позвон|звон|написа|связ|контакт', t): score += 10
+    # Навигация
+    if re.search(r'доставк|оплат|гарант|возврат|размер|пример', t): score += 15
+    # Шум — отзывы, статьи (с высоким штрафом если нет товарных слов)
+    if re.search(r'отзыв|комментар|доволен|рекоменд|благодар', t):
+        if not re.search(r'каталог|товар|услуг|цена', t) or text_len < 3000:
+            return 0
+    if re.search(r'истори|интервью|блог|рассказ', t):
+        return 0
+    # Бонус за Schema.org
+    if 'schema.org' in (html or '').lower() or 'application/ld+json' in (html or ''): score += 10
+    return max(0, min(100, score))
