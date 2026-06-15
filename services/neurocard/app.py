@@ -4,6 +4,7 @@ import re, sys, os, requests, html as html_module, json as json_module, time, ti
 from shared.supabase import get_supabase
 from shared.logger import log_event
 from shared.ai_client import ask_yandexgpt
+from shared.semantic_router import detect_intent
 
 neurocard_bp = Blueprint('neurocard', __name__)
 STATIC_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'neurocards')
@@ -85,17 +86,23 @@ def bot_chat():
 
     # Пробуем определить намерение через Semantic Router
     site_id = request.json.get('site_id', '').strip()
-    from shared.semantic_router import detect_intent
     intent = detect_intent(question)
     if intent and intent['priority'] == 1:
         target_url = None
         target_name = intent.get('url_template', 'Каталог')
         if site_id:
             try:
-                cats = get_supabase().table('site_categories').select('url','category_name').eq('site_id', site_id).execute()
-                if cats.data:
+                cache_key = f'cats_{site_id}'
+                cached_cats = _cache.get(cache_key, {})
+                if cached_cats and time.time() - cached_cats.get('ts', 0) < 600:
+                    cats_data = cached_cats['data']
+                else:
+                    cats = get_supabase().table('site_categories').select('url','category_name').eq('site_id', site_id).execute()
+                    cats_data = cats.data
+                    _cache[cache_key] = {'data': cats_data, 'ts': time.time()}
+                if cats_data:
                     q_words = [w.strip().lower() for w in question.lower().split() if len(w) > 2]
-                    for cat in cats.data:
+                    for cat in cats_data:
                         cat_name = cat.get('category_name', '').lower()
                         cat_url = cat.get('url', '').lower()
                         if any(w in cat_name or w in cat_url for w in q_words):
@@ -103,13 +110,13 @@ def bot_chat():
                             target_name = cat.get('category_name', 'Каталог')
                             break
                     if not target_url:
-                        target_url = cats.data[0].get('url')
-                        target_name = cats.data[0].get('category_name', 'Каталог')
+                        target_url = cats_data[0].get('url')
+                        target_name = cats_data[0].get('category_name', 'Каталог')
             except:
                 pass
         if not target_url:
             target_url = f"https://{domain}/shop/" if domain else "/shop/"
-        return jsonify({'answer': f'<p>Да, у нас есть то что вы ищете! 😊</p><p>Перейдите в раздел <a href="{target_url}">{target_name}</a>.</p><p>📞 Или свяжитесь с менеджером.</p>'})
+        return jsonify({'answer': f'<p>Да, у нас есть то что вы ищете! 😊</p><p>Перейдите в раздел <a href="{target_url}">{target_name}</a>.</p><p>📞 Или свяжитесь с менеджером.</p>', 'intent': intent['name'], 'target_url': target_url, 'target_name': target_name})
 
     # Ищем сайт и получаем релевантные чанки
     if domain or site_id:
