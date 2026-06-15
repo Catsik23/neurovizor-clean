@@ -59,15 +59,30 @@ INTENTS = {
 
 # Кэш эмбеддингов интентов
 _intent_embeddings = {}
+_embeddings_loaded = False
+
+def _preload_intent_embeddings():
+    """Предзагрузка эмбеддингов при старте."""
+    global _intent_embeddings, _embeddings_loaded
+    if not _embeddings_loaded:
+        import math
+        for name, intent in INTENTS.items():
+            embeddings = [embed_query(u) for u in intent['utterances']]
+            # Среднее геометрическое
+            avg = []
+            for col in zip(*embeddings):
+                product = 1.0
+                for v in col:
+                    product *= abs(v) + 1e-10
+                sign = 1 if sum(col) > 0 else -1
+                avg.append(math.pow(product, 1.0/len(col)) * sign)
+            _intent_embeddings[name] = avg
+        _embeddings_loaded = True
 
 def _get_intent_embeddings():
-    """Ленивая загрузка эмбеддингов интентов."""
-    if not _intent_embeddings:
-        for name, intent in INTENTS.items():
-            # Эмбеддинг = среднее по всем примерам
-            embeddings = [embed_query(u) for u in intent['utterances']]
-            avg = [sum(col) / len(col) for col in zip(*embeddings)]
-            _intent_embeddings[name] = avg
+    """Возвращает кэш эмбеддингов."""
+    if not _embeddings_loaded:
+        _preload_intent_embeddings()
     return _intent_embeddings
 
 
@@ -95,3 +110,6 @@ def detect_intent(question: str) -> dict:
             }
     
     return best_intent
+
+# Предзагружаем эмбеддинги при импорте
+_preload_intent_embeddings()
