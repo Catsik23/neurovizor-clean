@@ -134,9 +134,12 @@ def index_site(site_id: str, url: str, user_id: str):
         print(f">>> DELETING old chunks...", flush=True)
         import requests as _req
         import os as _os
+        _supabase_key = _os.environ.get("SUPABASE_KEY", "")
+        if not _supabase_key:
+            raise ValueError("SUPABASE_KEY not set")
         _del_headers = {
-            "apikey": _os.environ.get("SUPABASE_KEY", ""),
-            "Authorization": "Bearer " + _os.environ.get("SUPABASE_KEY", "")
+            "apikey": _supabase_key,
+            "Authorization": "Bearer " + _supabase_key
         }
         _req.delete(
             f"{_os.environ.get('SUPABASE_URL', '')}/rest/v1/knowledge_chunks?site_id=eq.{site_id}",
@@ -163,7 +166,7 @@ def index_site(site_id: str, url: str, user_id: str):
                     import os as _os
                     _payload = {
                         "site_id": site_id,
-                        "chunk_text": chunk["text"][:5000],
+                        "chunk_text": chunk["text"],
                         "chunk_type": chunk.get("chunk_type", "paragraph"),
                         "chunk_position": chunk.get("position", 0),
                         "source_url": page.get("url", ""),
@@ -182,7 +185,6 @@ def index_site(site_id: str, url: str, user_id: str):
                         saved_count += 1
                     else:
                         log_event("warning", "chunk_save_failed", site_id=site_id, status=_resp.status_code)
-                    saved_count += 1
                 except Exception as e:
                     log_event("warning", "chunk_save_failed", site_id=site_id, error=str(e))
 
