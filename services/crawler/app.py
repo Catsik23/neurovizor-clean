@@ -10,6 +10,7 @@ from shared.supabase import get_supabase
 from shared.utils import chunk_text, ai_visibility_audit, detect_site_type, extract_entities
 from shared.embeddings import embed_document
 from shared.logger import log_event
+from shared.utils import page_usefulness_score
 import threading
 
 crawler_bp = Blueprint('crawler', __name__)
@@ -148,8 +149,12 @@ def index_site(site_id: str, url: str, user_id: str):
         print(f">>> DELETED", flush=True)
 
         saved_count = 0
-        # Чанкуем каждую страницу отдельно, сохраняем source_url
+        noise_count = 0
+        # Чанкуем каждую страницу отдельно, фильтруем шум, сохраняем source_url
         for page in pages:
+            if page_usefulness_score(page.get("text", ""), page.get("html", ""), page.get("url", "")) < 20:
+                noise_count += 1
+                continue
             chunks = chunk_text(page["text"], source_url=page.get("url", ""))
             print(f">>> PAGE {page["url"]}: {len(chunks)} chunks", flush=True)
             for chunk in chunks:
