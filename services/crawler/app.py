@@ -147,15 +147,9 @@ def index_site(site_id: str, url: str, user_id: str):
         )
         print(f">>> DELETED", flush=True)
 
-        from shared.utils import page_usefulness_score
         saved_count = 0
-        noise_count = 0
-        # Чанкуем каждую страницу отдельно, фильтруем шум, сохраняем source_url
+        # Чанкуем каждую страницу отдельно, сохраняем source_url
         for page in pages:
-            # Пропускаем шумовые страницы
-            if page_usefulness_score(page.get("text", ""), page.get("html", ""), page.get("url", "")) < 20:
-                noise_count += 1
-                continue
             chunks = chunk_text(page["text"], source_url=page.get("url", ""))
             print(f">>> PAGE {page["url"]}: {len(chunks)} chunks", flush=True)
             for chunk in chunks:
