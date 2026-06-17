@@ -87,6 +87,8 @@ def bot_chat():
     # Пробуем определить намерение через Semantic Router
     site_id = request.json.get('site_id', '').strip()
     intent = detect_intent(question)
+    if intent and intent['name'] == 'general':
+        return jsonify({'answer': f'<p>{domain} — интернет-магазин с широким ассортиментом. У нас есть каталог товаров, доставка и контакты.</p><p>📞 Свяжитесь с менеджером для подробностей.</p>', 'intent': 'general'})
     if intent and intent['priority'] == 1:
         target_url = None
         target_name = intent.get('url_template', 'Каталог')

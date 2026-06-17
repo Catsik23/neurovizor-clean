@@ -194,36 +194,16 @@ def index_site(site_id: str, url: str, user_id: str):
                 except Exception as e:
                     log_event("warning", "chunk_save_failed", site_id=site_id, error=str(e))
 
-        supabase.table("sites").update({
-            "ai_visibility_score": audit_result.get("score", 0),
-            "site_type": site_type,
-            "faq_count": saved_count,
-            "parsed_content": all_text[:100000],
-            "pages_count": len(pages),
-            "indexed_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
-        }).eq("id", site_id).execute()
-
-        # Сохраняем карту категорий
-        try:
-            supabase.table("site_categories").delete().eq("site_id", site_id).execute()
-            cat_urls = {}
-            for page in pages:
-                for link in page.get('internal_links', []):
-                    url = link.get('url', '')
-                    title = link.get('title', '')[:80]
-                    if url and title and url not in cat_urls:
-                        cat_urls[url] = title
-                        supabase.table("site_categories").insert({
-                            "site_id": site_id,
-                            "category_name": title,
-                            "url": url
-                        }).execute()
-        except Exception as e:
-            print(f'>>> CATEGORIES ERROR: {e}', flush=True)
-            log_event("warning", "categories_save_failed", site_id=site_id, error=str(e))
-        else:
-            print(f'>>> CATEGORIES SAVED: {len(cat_urls)}', flush=True)
+        if not str(site_id).startswith('demo-'):
+            supabase.table("sites").update({
+                "ai_visibility_score": audit_result.get("score", 0),
+                "site_type": site_type,
+                "faq_count": saved_count,
+                "parsed_content": all_text[:100000],
+                "pages_count": len(pages),
+                "indexed_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }).eq("id", site_id).execute()
 
         log_event("info", "index_site_completed", site_id=site_id,
                  chunk_count=saved_count, score=audit_result.get("score"))

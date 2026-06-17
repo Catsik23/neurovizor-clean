@@ -10,10 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-deep: #05001a;
+            --bg-deep: #0d0d2b;
             --bg-space: #060318;
-            --bg-card: rgba(14, 12, 38, 0.8);
-            --bg-card-hover: rgba(22, 18, 55, 0.92);
+            --bg-card: rgba(14, 12, 38, 0.5);
+            --bg-card-hover: rgba(22, 18, 55, 0.65);
             --border-dim: rgba(120, 100, 255, 0.08);
             --border-glow: rgba(140, 120, 255, 0.35);
             --border-neon: rgba(192, 132, 252, 0.5);
@@ -63,7 +63,7 @@
 
         body {
             font-family: var(--font-sans);
-            background: radial-gradient(ellipse 300px 200px at 10% 20%, rgba(192,132,252,0.06) 0%, transparent 70%), radial-gradient(ellipse 250px 250px at 90% 15%, rgba(34,211,238,0.05) 0%, transparent 70%), radial-gradient(ellipse 200px 300px at 5% 80%, rgba(124,58,237,0.05) 0%, transparent 70%), radial-gradient(ellipse 300px 200px at 95% 85%, rgba(0,255,136,0.04) 0%, transparent 70%), var(--bg-deep);
+            background: linear-gradient(180deg, #1a1a3e 0%, #1e2048 30%, #1a2840 60%, #1a2a3a 100%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
@@ -127,12 +127,12 @@
         .header-inner {
             max-width: 1200px;
             margin: 12px auto 0;
-            background: var(--bg-card);
+            background: rgba(14, 12, 38, 0.4);
             border: 1px solid var(--border-dim);
             border-radius: var(--radius-lg);
             padding: 10px 24px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -141,7 +141,7 @@
         .header.scrolled .header-inner {
             border-color: var(--border-glow);
             box-shadow: var(--shadow-neon);
-            background: rgba(10, 8, 30, 0.95);
+            background: rgba(10, 8, 30, 0.6);
         }
         .logo {
             display: flex;
@@ -299,7 +299,7 @@
 
         /* ========== CARDS ========== */
         .card {
-            background: var(--bg-card);
+            background: rgba(14, 12, 38, 0.4);
             border: 1px solid var(--border-dim);
             border-radius: var(--radius-md);
             padding: 24px;
@@ -524,7 +524,7 @@
             left: 50%;
             transform: translateX(-50%) translateY(120px);
             z-index: 10000;
-            background: var(--bg-card);
+            background: rgba(14, 12, 38, 0.4);
             border: 1px solid var(--border-neon);
             border-radius: var(--radius-md);
             padding: 14px 24px;
@@ -532,7 +532,7 @@
             font-size: 0.82rem;
             color: var(--neon-purple);
             box-shadow: var(--shadow-neon-strong);
-            backdrop-filter: blur(24px);
+            backdrop-filter: blur(4px);
             transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: none;
             display: flex;
@@ -586,11 +586,11 @@
             right: 0;
             width: 340px;
             max-height: 480px;
-            background: var(--bg-card);
+            background: rgba(14, 12, 38, 0.4);
             border: 1px solid var(--border-neon);
             border-radius: var(--radius-lg);
             overflow: hidden;
-            backdrop-filter: blur(24px);
+            backdrop-filter: blur(4px);
             box-shadow: var(--shadow-lg);
             display: none;
             flex-direction: column;

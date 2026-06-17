@@ -34,19 +34,19 @@ def _headers():
 
 def supabase_get(endpoint, params=None):
     url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
-    return _get_session().get(url, headers=_headers(), params=params, timeout=15)
+    return _get_session().get(url, headers=_headers(), params=params, timeout=60)
 
 def supabase_post(endpoint, json_data):
     url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
-    return _get_session().post(url, headers=_headers(), json=json_data, timeout=15)
+    return _get_session().post(url, headers=_headers(), json=json_data, timeout=60)
 
 def supabase_delete(endpoint, params=None):
     url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
-    return _get_session().delete(url, headers=_headers(), params=params, timeout=15)
+    return _get_session().delete(url, headers=_headers(), params=params, timeout=60)
 
 def supabase_rpc(function_name, json_data):
     url = f"{SUPABASE_URL}/rest/v1/rpc/{function_name}"
-    return _get_session().post(url, headers=_headers(), json=json_data, timeout=15)
+    return _get_session().post(url, headers=_headers(), json=json_data, timeout=60)
 
 # Совместимость со старым кодом
 from supabase import create_client
