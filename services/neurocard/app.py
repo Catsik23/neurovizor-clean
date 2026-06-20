@@ -103,15 +103,24 @@ def bot_chat():
                     cats_data = cats.data
                     _cache[cache_key] = {'data': cats_data, 'ts': time.time()}
                 if cats_data:
-                    q_words = [w.strip().lower() for w in question.lower().split() if len(w) > 2]
+                    from shared.embeddings import embed_query, embed_document, cosine_similarity
+                    q_emb = embed_query(question)
+                    best_sim = 0
                     for cat in cats_data:
-                        cat_name = cat.get('category_name', '').lower()
-                        cat_url = cat.get('url', '').lower()
-                        if any(w in cat_name or w in cat_url for w in q_words):
-                            target_url = cat.get('url')
-                            target_name = cat.get('category_name', 'Каталог')
-                            break
-                    if not target_url:
+                        cat_name = cat.get('category_name', '')
+                        try:
+                            cat_emb = embed_document(cat_name)
+                            sim = cosine_similarity(q_emb, cat_emb)
+                            if sim > best_sim:
+                                best_sim = sim
+                                target_url = cat.get('url')
+                                target_name = cat_name
+                            if target_name.startswith('http'):
+                                parts = cat.get('url','').strip('/').split('/')
+                                target_name = parts[-1] if parts else target_name
+                        except:
+                            pass
+                    if best_sim < 0.6:
                         target_url = cats_data[0].get('url')
                         target_name = cats_data[0].get('category_name', 'Каталог')
             except:

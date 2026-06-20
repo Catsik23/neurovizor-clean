@@ -15,7 +15,7 @@ def get_model():
         _model = SentenceTransformer('/opt/neurovizor/models/e5-small', trust_remote_code=True)
     return _model
 
-def ask_yandexgpt(question, context, system_prompt=None):
+def ask_yandexgpt(question, context, system_prompt=None, max_tokens=400, temperature=0.3):
     if not YANDEX_API_KEY or not YANDEX_FOLDER_ID:
         return simple_search(question, context)
     try:
@@ -27,7 +27,7 @@ def ask_yandexgpt(question, context, system_prompt=None):
             },
             json={
                 "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-lite",
-                "completionOptions": {"maxTokens": 400, "temperature": 0.3},
+                "completionOptions": {"maxTokens": max_tokens, "temperature": temperature},
                 "messages": [
                     {"role": "system", "text": system_prompt if system_prompt else "Ты — ИИ-ассистент Нейровизора, персональный помощник этого сайта. Отвечай ТОЛЬКО HTML-тегами внутри тела сообщения: <b>жирный</b>, <ul><li>списки</li></ul>, эмодзи 📦 💰 📞. Если есть ссылки — <a href='URL'>Название</a>. НЕ добавляй <!DOCTYPE>, <html>, <head>, <body>. Если информации нет — предложи связаться с менеджером.\nИНФО:\n" + context[:4000]},
                     {"role": "user", "text": question}
