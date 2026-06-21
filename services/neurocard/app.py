@@ -105,29 +105,43 @@ def bot_chat():
                 if cats_data:
                     from shared.embeddings import embed_query, embed_document, cosine_similarity
                     q_emb = embed_query(question)
-                    best_sim = 0
+                    all_scores = []
                     for cat in cats_data:
                         cat_name = cat.get('category_name', '')
                         try:
                             cat_emb = embed_document(cat_name)
                             sim = cosine_similarity(q_emb, cat_emb)
-                            if sim > best_sim:
-                                best_sim = sim
-                                target_url = cat.get('url')
-                                target_name = cat_name
-                            if target_name.startswith('http'):
-                                parts = cat.get('url','').strip('/').split('/')
-                                target_name = parts[-1] if parts else target_name
+                            url_depth = len(cat.get('url','').strip('/').split('/'))
+                            score = sim - url_depth * 0.01
+                            all_scores.append({'url': cat.get('url'), 'name': cat_name, 'score': score, 'sim': sim})
                         except:
                             pass
-                    if best_sim < 0.6:
-                        target_url = cats_data[0].get('url')
-                        target_name = cats_data[0].get('category_name', 'Каталог')
+                    all_scores.sort(key=lambda x: x['score'], reverse=True)
+                    if all_scores:
+                        best = all_scores[0]
+                        if best['score'] > 0.5:
+                            target_url = best['url']
+                            target_name = best['name']
+                        else:
+                            # Предлагаем топ-3 альтернативы
+                            top3 = all_scores[:3]
+                            alt_links = ' | '.join([f'<a href="{c["url"]}">{c["name"]}</a>' for c in top3])
+                            target_url = top3[0]['url']
+                            target_name = f'Возможно вас интересует: {alt_links}'
             except:
                 pass
         if not target_url:
             target_url = f"https://{domain}/shop/" if domain else "/shop/"
-        return jsonify({'answer': f'<p>Да, у нас есть то что вы ищете! 😊</p><p>Перейдите в раздел <a href="{target_url}">{target_name}</a>.</p><p>📞 Или свяжитесь с менеджером.</p>', 'intent': intent['name'], 'target_url': target_url, 'target_name': target_name})
+        # Генерируем живой ответ через AI
+        ai_answer = ask_yandexgpt(
+            question, 
+            f'Раздел сайта: {target_name} ({target_url})',
+            f'{PROMPTS.get(site_type, PROMPTS["general"])}\nДай ссылку на раздел: <a href="{target_url}">{target_name}</a>. Будь живым и полезным, как хороший продавец.'
+        )
+        # Убираем markdown
+        import re as _re2
+        ai_answer = _re2.sub(r'```(?:html)?\s*|\s*```', '', ai_answer).strip()
+        return jsonify({'answer': ai_answer, 'intent': intent['name'], 'target_url': target_url, 'target_name': target_name})
 
     # Ищем сайт и получаем релевантные чанки
     if domain or site_id:
