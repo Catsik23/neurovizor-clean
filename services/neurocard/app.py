@@ -13,11 +13,11 @@ _cache = {}
 
 # Адаптивные промпты
 PROMPTS = {
-    'shop': 'Ты — ИИ-ассистент Нейровизора, консультант интернет-магазина. Отвечай на HTML: <ul><li>списки</li></ul>, эмодзи 📦 💰, <b>цены</b>. Если в информации есть ссылки — используй их: <a href="URL">Название раздела</a>. Предлагай оформить заказ.',
-    'service': 'Ты — ИИ-ассистент Нейровизора, администратор. Отвечай на HTML: эмодзи 📅, <b>время</b>. Предлагай запись на услуги. Уточняй удобное время. Если есть ссылки — используй их.',
-    'food': 'Ты — ИИ-ассистент Нейровизора, официант. Отвечай на HTML: эмодзи 🍽️, <ul><li>блюда с ценами</li></ul>. Если есть ссылки на меню — используй их.',
-    'b2b': 'Ты — ИИ-ассистент Нейровизора, менеджер по продажам. Отвечай на HTML: эмодзи 💼, <b>решения</b>. Предлагай демо или консультацию. Если есть ссылки — используй их.',
-    'general': 'Ты — ИИ-ассистент Нейровизора. Отвечай на HTML: эмодзи 📞, <ul><li>списки</li></ul>. Если есть ссылки — <a href="URL">Название</a>. Предлагай связаться с менеджером.'
+    'shop': 'Ты — ИИ-ассистент магазина. НЕ называй себя Нейровизором. НЕ здоровайся каждый раз, консультант интернет-магазина. Отвечай на HTML: <ul><li>списки</li></ul>, эмодзи 📦 💰, <b>цены</b>. Если в информации есть ссылки — используй их: <a href="URL">Название раздела</a>. Предлагай оформить заказ.',
+    'service': 'Ты — ИИ-ассистент магазина. НЕ называй себя Нейровизором. НЕ здоровайся каждый раз, администратор. Отвечай на HTML: эмодзи 📅, <b>время</b>. Предлагай запись на услуги. Уточняй удобное время. Если есть ссылки — используй их.',
+    'food': 'Ты — ИИ-ассистент магазина. НЕ называй себя Нейровизором. НЕ здоровайся каждый раз, официант. Отвечай на HTML: эмодзи 🍽️, <ul><li>блюда с ценами</li></ul>. Если есть ссылки на меню — используй их.',
+    'b2b': 'Ты — ИИ-ассистент магазина. НЕ называй себя Нейровизором. НЕ здоровайся каждый раз, менеджер по продажам. Отвечай на HTML: эмодзи 💼, <b>решения</b>. Предлагай демо или консультацию. Если есть ссылки — используй их.',
+    'general': 'Ты — ИИ-ассистент магазина. НЕ называй себя Нейровизором. НЕ здоровайся каждый раз. Отвечай на HTML: эмодзи 📞, <ul><li>списки</li></ul>. Если есть ссылки — <a href="URL">Название</a>. Предлагай связаться с менеджером.'
 }
 
 
@@ -86,7 +86,16 @@ def bot_chat():
 
     # Пробуем определить намерение через Semantic Router
     site_id = request.json.get('site_id', '').strip()
-    intent = detect_intent(question)
+    
+    # Контекст диалога: если вопрос короткий — добавляем предыдущий
+    last_question = _cache.get(f'last_q_{site_id}', '') if site_id else ''
+    full_question = question
+    if len(question.split()) <= 2 and last_question:
+        full_question = last_question + ' ' + question
+    if site_id:
+        _cache[f'last_q_{site_id}'] = question
+
+    intent = detect_intent(full_question)
     if intent and intent['name'] == 'general':
         return jsonify({'answer': f'<p>{domain} — интернет-магазин с широким ассортиментом. У нас есть каталог товаров, доставка и контакты.</p><p>📞 Свяжитесь с менеджером для подробностей.</p>', 'intent': 'general'})
     if intent and intent['priority'] == 1:
@@ -103,9 +112,15 @@ def bot_chat():
                     cats_data = cats.data
                     _cache[cache_key] = {'data': cats_data, 'ts': time.time()}
                 if cats_data:
-                    from shared.embeddings import embed_query, embed_document, cosine_similarity
-                    q_emb = embed_query(question)
-                    all_scores = []
+                    # Кэшируем эмбеддинги категорий
+                    emb_cache_key = f'cats_emb_{site_id}'
+                    cached_embs = _cache.get(emb_cache_key, {})
+                    if cached_embs and time.time() - cached_embs.get('ts', 0) < 600:
+                        all_scores = cached_embs['data']
+                    else:
+                        from shared.embeddings import embed_query, embed_document, cosine_similarity
+                        q_emb = embed_query(question)
+                        all_scores = []
                     for cat in cats_data:
                         cat_name = cat.get('category_name', '')
                         try:
@@ -116,6 +131,7 @@ def bot_chat():
                             all_scores.append({'url': cat.get('url'), 'name': cat_name, 'score': score, 'sim': sim})
                         except:
                             pass
+                        _cache[emb_cache_key] = {'data': all_scores, 'ts': time.time()}
                     all_scores.sort(key=lambda x: x['score'], reverse=True)
                     if all_scores:
                         best = all_scores[0]
@@ -136,7 +152,7 @@ def bot_chat():
         ai_answer = ask_yandexgpt(
             question, 
             f'Раздел сайта: {target_name} ({target_url})',
-            f'{PROMPTS.get(site_type, PROMPTS["general"])}\nДай ссылку на раздел: <a href="{target_url}">{target_name}</a>. Будь живым и полезным, как хороший продавец.'
+            f'{PROMPTS.get(site_type, PROMPTS["general"])}\nДай ссылку на раздел (откроется в новой вкладке): <a href="{target_url}" target="_blank">{target_name}</a>. Будь живым и полезным, как хороший продавец.'
         )
         # Убираем markdown
         import re as _re2

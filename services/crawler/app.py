@@ -205,6 +205,32 @@ def index_site(site_id: str, url: str, user_id: str):
                 "updated_at": datetime.utcnow().isoformat()
             }).eq("id", site_id).execute()
 
+        # Сохраняем категории через AI-фильтр v2
+        try:
+            from shared.site_mapper_v2 import filter_golden_urls_v2
+            from shared.supabase import get_supabase as _gs
+            # Собираем URL из internal_links
+            all_urls = {}
+            for page in pages:
+                for link in page.get('internal_links', []):
+                    u = link.get('url', '')
+                    t = link.get('title', '')[:80]
+                    if u and t and u not in all_urls:
+                        all_urls[u] = t
+            if all_urls:
+                golden = filter_golden_urls_v2(all_urls, site_type)
+                if golden:
+                    s = _gs()
+                    s.table('site_categories').delete().eq('site_id', site_id).execute()
+                    batch = [{'site_id': site_id, 'category_name': item['title'][:80], 'url': item['url']} for item in golden]
+                    for i in range(0, len(batch), 20):
+                        s = _gs()
+                        s.table('site_categories').insert(batch[i:i+20]).execute()
+                    print(f'>>> CATEGORIES SAVED: {len(golden)}', flush=True)
+        except Exception as e:
+            print(f'>>> CATEGORIES ERROR: {e}', flush=True)
+            log_event("warning", "categories_index_failed", error=str(e))
+
         log_event("info", "index_site_completed", site_id=site_id,
                  chunk_count=saved_count, score=audit_result.get("score"))
 

@@ -86,7 +86,7 @@ def demo():
     def demo_index():
         try:
             from services.crawler.app import index_site
-            index_site(demo_site_id, result.get('url', ''), 'demo')
+            index_site(demo_site_id, result.get('url', 'https://' + result.get('domain', '')), 'demo')
         except Exception as e:
             print('>>> DEMO INDEX ERROR:', str(e), flush=True)
             log_event('demo_index_error', error=str(e), site_id=demo_site_id)
